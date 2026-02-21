@@ -1,6 +1,2 @@
 Flask==3.0.0
 gunicorn==21.2.0
-2.  Crea un archivo llamado **`.gitignore`** (con el punto al principio) para no subir archivos basura a GitHub:
-```text
-__pycache__/
-datos_tienda.json
