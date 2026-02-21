@@ -1,3 +1,4 @@
+import json
 import os
 import urllib.request
 import urllib.error
@@ -696,40 +697,41 @@ def contacto():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-...         password_admin = os.environ.get("ADMIN_PASSWORD", "admin123")
-...         if request.form.get('password') == password_admin:
-...             session['admin'] = True
-...             return redirect(url_for('admin'))
-...         return render_template_string(LOGIN_TEMPLATE, error="Contraseña incorrecta")
-...     return render_template_string(LOGIN_TEMPLATE, error=None)
-... 
-... @app.route('/logout')
-... def logout():
-...     session.pop('admin', None)
-...     return redirect(url_for('inicio'))
-... 
-... @app.route('/admin')
-... def admin():
-...     if not session.get('admin'):
-...         return redirect(url_for('login'))
-...     # CORRECCIÓN AQUÍ: Devolver la plantilla directamente para que Jinja no interfiera con Vue.
-...     return ADMIN_TEMPLATE
-... 
-... @app.route('/api/datos', methods=['GET'])
-... def api_get_datos():
-...     if not session.get('admin'):
-...         return jsonify({"error": "No autorizado"}), 403
-...     return jsonify(obtener_datos())
-... 
-... @app.route('/api/datos', methods=['POST'])
-... def api_post_datos():
-...     if not session.get('admin'):
-...         return jsonify({"error": "No autorizado"}), 403
-...     try:
-...         guardar_datos(request.get_json())
-...         return jsonify({"status": "ok"})
-...     except Exception as e:
-...         return jsonify({"error": str(e)}), 500
-... 
-... if __name__ == '__main__':
-...     puerto = int(os.environ.get('PORT', 5000))
+        password_admin = os.environ.get("ADMIN_PASSWORD", "admin123")
+        if request.form.get('password') == password_admin:
+            session['admin'] = True
+            return redirect(url_for('admin'))
+        return render_template_string(LOGIN_TEMPLATE, error="Contraseña incorrecta")
+    return render_template_string(LOGIN_TEMPLATE, error=None)
+
+@app.route('/logout')
+def logout():
+    session.pop('admin', None)
+    return redirect(url_for('inicio'))
+
+@app.route('/admin')
+def admin():
+    if not session.get('admin'):
+        return redirect(url_for('login'))
+    # CORRECCIÓN AQUÍ: Devolver la plantilla directamente para que Jinja no interfiera con Vue.
+    return ADMIN_TEMPLATE
+
+@app.route('/api/datos', methods=['GET'])
+def api_get_datos():
+    if not session.get('admin'):
+        return jsonify({"error": "No autorizado"}), 403
+    return jsonify(obtener_datos())
+
+@app.route('/api/datos', methods=['POST'])
+def api_post_datos():
+    if not session.get('admin'):
+        return jsonify({"error": "No autorizado"}), 403
+    try:
+        guardar_datos(request.get_json())
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    puerto = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', debug=False, port=puerto)
