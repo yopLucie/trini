@@ -1,3 +1,5 @@
+Python 3.12.6 (v3.12.6:a4a2d2b0d85, Sep  6 2024, 16:08:03) [Clang 13.0.0 (clang-1300.0.29.30)] on darwin
+Type "help", "copyright", "credits" or "license()" for more information.
 import json
 import os
 import urllib.request
@@ -21,16 +23,18 @@ ARCHIVO_DATOS = "datos_tienda.json"
 # ============================================================
 DATOS_POR_DEFECTO = {
     "info": {
-        "nombre":      "Taller de bicicletas Trinidad",
+        "nombre":      "VeloGarage",
         "slogan":      "Tu bici, tu pasión, nuestro oficio.",
         "descripcion": "Reparamos, equipamos y apasionamos. Taller profesional con más de 12 años de experiencia en bicicletas de ruta, MTB, gravel y e-bikes.",
-        "direccion":   "Av. Reforma 123, Ciudad de México, CDMX",
         "telefono":    "+52 55 1234 5678",
         "whatsapp":    "5215512345678",
         "email":       "hola@velogarage.com.mx",
-        "maps_embed":  "https://maps.google.com/maps?q=Mexico%20City&t=&z=13&ie=UTF8&iwloc=&output=embed",
         "instagram":   "https://instagram.com/velogarage",
         "facebook":    "https://facebook.com/velogarage",
+        "banco":       "BBVA",
+        "titular":     "VeloGarage México",
+        "clabe":       "012345678901234567",
+        "qr_pago":     "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=012345678901234567",
         "anios":       "12",
         "clientes":    "800",
         "horarios": [
@@ -39,6 +43,14 @@ DATOS_POR_DEFECTO = {
             {"dia": "Domingo",         "hora": "Cerrado"},
         ],
     },
+    "ubicaciones": [
+        {
+            "id": 1, 
+            "nombre": "Sucursal Matriz", 
+            "direccion": "Av. Reforma 123, Ciudad de México, CDMX", 
+            "maps_embed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3762.661706692882!2d-99.16869362391038!3d19.42702454086111!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d1ff35f5bd1563%3A0x6c366f0e2de02ff7!2sEl%20%C3%81ngel%20de%20la%20Independencia!5e0!3m2!1ses-419!2smx!4v1700000000000!5m2!1ses-419!2smx"
+        }
+    ],
     "stats": [
         {"numero": "+800", "label": "Bicis reparadas"},
         {"numero": "12+",  "label": "Años de experiencia"},
@@ -85,7 +97,7 @@ def fusionar_seguro(base, nuevo):
     res = copy.deepcopy(base)
     if "info" in nuevo and isinstance(nuevo["info"], dict):
         res["info"].update(nuevo["info"])
-    for k in ["bicicletas", "accesorios", "repuestos", "servicios", "marcas", "resenas", "stats"]:
+    for k in ["bicicletas", "accesorios", "repuestos", "servicios", "marcas", "resenas", "stats", "ubicaciones"]:
         if k in nuevo:
             res[k] = nuevo[k]
     return res
@@ -223,12 +235,18 @@ ADMIN_TEMPLATE = """
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Slogan</label><input v-model="datos.info.slogan" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfono Público</label><input v-model="datos.info.telefono" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp (solo números)</label><input v-model="datos.info.whatsapp" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none" placeholder="5215512345678"></div>
-                    <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección</label><input v-model="datos.info.direccion" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label><input v-model="datos.info.email" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Años de experiencia</label><input v-model="datos.info.anios" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Instagram (URL)</label><input v-model="datos.info.instagram" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
                     <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Facebook (URL)</label><input v-model="datos.info.facebook" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
-                    <div class="md:col-span-2">
+                    
+                    <div class="md:col-span-2 mt-4"><h3 class="text-sm font-bold text-orange-500 uppercase border-b pb-1">Datos Bancarios / Pagos</h3></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Banco</label><input v-model="datos.info.banco" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Titular de la cuenta</label><input v-model="datos.info.titular" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">CLABE Interbancaria</label><input v-model="datos.info.clabe" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL Código QR (Opcional)</label><input v-model="datos.info.qr_pago" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none" placeholder="https://..."></div>
+                    
+                    <div class="md:col-span-2 mt-4">
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Horarios (uno por línea: Día: Hora)</label>
                         <textarea v-model="horariosTexto" rows="3" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none font-mono text-sm" placeholder="Lunes – Viernes: 9:00 AM – 7:00 PM&#10;Sábado: 10:00 AM – 3:00 PM&#10;Domingo: Cerrado"></textarea>
                     </div>
@@ -269,6 +287,26 @@ ADMIN_TEMPLATE = """
                     No hay artículos aquí. Toca "+ Nuevo Artículo" para empezar.
                 </div>
             </div>
+
+            <div v-show="currentTab === 'ubicaciones'" class="space-y-6">
+                <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                    <h2 class="text-xl font-bold capitalize text-gray-800">Ubicaciones / Sucursales</h2>
+                    <button @click="agregarItem('ubicaciones')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold text-sm shadow transition">+ Nueva Ubicación</button>
+                </div>
+
+                <div v-for="(item, index) in datos.ubicaciones" :key="index" class="bg-white p-5 rounded-lg shadow-md border-l-4 border-orange-500 relative hover:shadow-lg transition-shadow">
+                    <button @click="eliminarItem('ubicaciones', index)" class="absolute top-3 right-3 text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-full w-8 h-8 flex items-center justify-center font-bold">&times;</button>
+                    <div class="grid grid-cols-1 gap-3">
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre (Ej: Matriz, Sucursal Sur)</label><input v-model="item.nombre" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none"></div>
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección Completa</label><input v-model="item.direccion" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none"></div>
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL de Google Maps (Solo el enlace src="...")</label><input v-model="item.maps_embed" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none" placeholder="https://www.google.com/maps/embed?pb=..."></div>
+                    </div>
+                </div>
+                <div v-if="!datos.ubicaciones || datos.ubicaciones.length === 0" class="text-center p-8 text-gray-500 bg-white rounded-lg shadow border-2 border-dashed border-gray-300">
+                    No hay ubicaciones. Toca "+ Nueva Ubicación" para empezar.
+                </div>
+            </div>
+
         </div>
         <div v-if="mensaje" class="fixed bottom-4 right-4 bg-gray-900 text-white border-l-4 border-orange-500 px-6 py-4 rounded shadow-2xl font-bold">{{ mensaje }}</div>
     </div>
@@ -277,9 +315,9 @@ ADMIN_TEMPLATE = """
     createApp({
         data() {
             return {
-                cargando: true, guardando: false, mensaje: '', currentTab: 'bicicletas',
-                tabs: [{ id: 'info', nombre: '⚙️ General' }, { id: 'bicicletas', nombre: '🚲 Bicis' }, { id: 'accesorios', nombre: '🪖 Accesorios' }, { id: 'repuestos', nombre: '🔩 Repuestos' }],
-                datos: { info: {}, bicicletas: [], accesorios: [], repuestos: [] }, horariosTexto: '',
+                cargando: true, guardando: false, mensaje: '', currentTab: 'info',
+                tabs: [{ id: 'info', nombre: '⚙️ General' }, { id: 'bicicletas', nombre: '🚲 Bicis' }, { id: 'accesorios', nombre: '🪖 Accesorios' }, { id: 'repuestos', nombre: '🔩 Repuestos' }, { id: 'ubicaciones', nombre: '📍 Ubicaciones' }],
+                datos: { info: {}, bicicletas: [], accesorios: [], repuestos: [], ubicaciones: [] }, horariosTexto: '',
             };
         },
         methods: {
@@ -287,14 +325,16 @@ ADMIN_TEMPLATE = """
                 try {
                     const res  = await fetch('/api/datos');
                     const data = await res.json();
-                    this.datos = Object.assign({ info: {}, bicicletas: [], accesorios: [], repuestos: [] }, data);
+                    this.datos = Object.assign({ info: {}, bicicletas: [], accesorios: [], repuestos: [], ubicaciones: [] }, data);
                     if (this.datos.info.horarios) this.horariosTexto = this.datos.info.horarios.map(h => h.dia + ': ' + h.hora).join('\\n');
                 } catch(e) { alert('Error cargando datos.'); } finally { this.cargando = false; }
             },
             agregarItem(cat) {
                 if (!this.datos[cat]) this.datos[cat] = [];
                 const nuevo = { id: Date.now(), descripcion: '', precio: 0, imagen: '', badge: '' };
-                if (cat === 'bicicletas') { nuevo.modelo = 'Nueva Bici'; nuevo.talla = ''; } else { nuevo.nombre = 'Nuevo Artículo'; }
+                if (cat === 'bicicletas') { nuevo.modelo = 'Nueva Bici'; nuevo.talla = ''; } 
+                else if (cat === 'ubicaciones') { nuevo.nombre = 'Nueva Sucursal'; nuevo.direccion = ''; nuevo.maps_embed = ''; }
+                else { nuevo.nombre = 'Nuevo Artículo'; }
                 this.datos[cat].unshift(nuevo);
             },
             eliminarItem(cat, idx) { if (confirm('¿Eliminar este artículo?')) this.datos[cat].splice(idx, 1); },
@@ -559,11 +599,42 @@ footer{background:var(--black);border-top:1px solid #1a1a1a;padding:3.5rem 3rem 
 
 <section class="contact" id="contacto">
   <div class="contact-info"><div class="section-sub"><span class="line-h"></span>Estamos aquí</div><h2 class="section-title">Contáctanos</h2><p>¿Quieres agendar una cita o saber más? Escríbenos o visítanos.</p>
-    <div class="info-item"><div class="info-icon">📍</div><div><div class="info-label">Dirección</div><div class="info-value">{{ info.direccion }}</div></div></div>
+    
+    <div style="margin-bottom: 2rem;">
+        {% for ubi in ubicaciones %}
+        <div class="info-item" style="margin-bottom: 1.5rem; align-items: flex-start; padding-bottom: 1.5rem; border-bottom: 1px dashed #2a2a2a;">
+            <div class="info-icon" style="margin-right: 0.5rem;">📍</div>
+            <div style="width: 100%;">
+                <div class="info-label">{{ ubi.nombre }}</div>
+                <div class="info-value" style="margin-bottom: 0.8rem;">{{ ubi.direccion }}</div>
+                {% if ubi.maps_embed %}
+                <div style="border:1px solid #2a2a2a;overflow:hidden;height:180px;width:100%;border-radius:6px;">
+                    <iframe width="100%" height="100%" frameborder="0" src="{{ ubi.maps_embed }}" style="filter:grayscale(80%) invert(90%) contrast(0.9);"></iframe>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
     <div class="info-item"><div class="info-icon">📞</div><div><div class="info-label">Teléfono</div><div class="info-value">{{ info.telefono }}</div></div></div>
     <div class="info-item"><div class="info-icon">📧</div><div><div class="info-label">Email</div><div class="info-value">{{ info.email }}</div></div></div>
     <div class="info-item"><div class="info-icon">🕐</div><div><div class="info-label">Horarios</div>{% for h in info.horarios %}<div class="info-value">{{ h.dia }}: {{ h.hora }}</div>{% endfor %}</div></div>
-    <div style="margin-top:1.5rem;border:1px solid #2a2a2a;overflow:hidden;height:220px;"><iframe width="100%" height="100%" frameborder="0" src="{{ info.maps_embed }}" style="filter:grayscale(80%) invert(90%) contrast(0.9);"></iframe></div>
+    
+    <div style="margin-top:2rem; background:var(--card); padding:1.5rem; border:1px solid #2a2a2a; border-left:3px solid var(--orange);">
+      <div style="font-size:.68rem; color:var(--orange); font-weight:700; letter-spacing:.15em; text-transform:uppercase; margin-bottom:1rem;">Datos para Transferencia</div>
+      <div style="display:flex; gap:1.5rem; align-items:center; flex-wrap:wrap;">
+        {% if info.qr_pago %}
+        <img src="{{ info.qr_pago }}" alt="QR de Pago" style="width:90px; height:90px; object-fit:contain; background:white; padding:5px; border-radius:6px;">
+        {% endif %}
+        <div>
+          <div style="font-size:.75rem; color:var(--gray); margin-bottom:.1rem;"><strong>Banco:</strong> {{ info.banco }}</div>
+          <div style="font-size:.75rem; color:var(--gray); margin-bottom:.4rem;"><strong>Titular:</strong> {{ info.titular }}</div>
+          <div style="font-size:.68rem; color:var(--orange); text-transform:uppercase; letter-spacing:.1em; margin-bottom:.1rem;">CLABE Interbancaria</div>
+          <div style="font-size:1.1rem; font-family:monospace; color:var(--white); font-weight:bold; letter-spacing:1px;">{{ info.clabe }}</div>
+        </div>
+      </div>
+    </div>
   </div>
   <div><form class="contact-form" id="contactForm">
     <div class="form-row"><div class="form-field"><label class="form-label">Nombre</label><input type="text" class="form-input" id="fname" placeholder="Tu nombre" required></div><div class="form-field"><label class="form-label">Teléfono</label><input type="tel" class="form-input" id="fphone" placeholder="+52 55 ..."></div></div>
@@ -628,41 +699,40 @@ def contacto():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        password_admin = os.environ.get("ADMIN_PASSWORD", "admin123")
-        if request.form.get('password') == password_admin:
-            session['admin'] = True
-            return redirect(url_for('admin'))
-        return render_template_string(LOGIN_TEMPLATE, error="Contraseña incorrecta")
-    return render_template_string(LOGIN_TEMPLATE, error=None)
-
-@app.route('/logout')
-def logout():
-    session.pop('admin', None)
-    return redirect(url_for('inicio'))
-
-@app.route('/admin')
-def admin():
-    if not session.get('admin'):
-        return redirect(url_for('login'))
-    # CORRECCIÓN AQUÍ: Devolver la plantilla directamente para que Jinja no interfiera con Vue.
-    return ADMIN_TEMPLATE
-
-@app.route('/api/datos', methods=['GET'])
-def api_get_datos():
-    if not session.get('admin'):
-        return jsonify({"error": "No autorizado"}), 403
-    return jsonify(obtener_datos())
-
-@app.route('/api/datos', methods=['POST'])
-def api_post_datos():
-    if not session.get('admin'):
-        return jsonify({"error": "No autorizado"}), 403
-    try:
-        guardar_datos(request.get_json())
-        return jsonify({"status": "ok"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-if __name__ == '__main__':
-    puerto = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', debug=False, port=puerto)
+...         password_admin = os.environ.get("ADMIN_PASSWORD", "admin123")
+...         if request.form.get('password') == password_admin:
+...             session['admin'] = True
+...             return redirect(url_for('admin'))
+...         return render_template_string(LOGIN_TEMPLATE, error="Contraseña incorrecta")
+...     return render_template_string(LOGIN_TEMPLATE, error=None)
+... 
+... @app.route('/logout')
+... def logout():
+...     session.pop('admin', None)
+...     return redirect(url_for('inicio'))
+... 
+... @app.route('/admin')
+... def admin():
+...     if not session.get('admin'):
+...         return redirect(url_for('login'))
+...     # CORRECCIÓN AQUÍ: Devolver la plantilla directamente para que Jinja no interfiera con Vue.
+...     return ADMIN_TEMPLATE
+... 
+... @app.route('/api/datos', methods=['GET'])
+... def api_get_datos():
+...     if not session.get('admin'):
+...         return jsonify({"error": "No autorizado"}), 403
+...     return jsonify(obtener_datos())
+... 
+... @app.route('/api/datos', methods=['POST'])
+... def api_post_datos():
+...     if not session.get('admin'):
+...         return jsonify({"error": "No autorizado"}), 403
+...     try:
+...         guardar_datos(request.get_json())
+...         return jsonify({"status": "ok"})
+...     except Exception as e:
+...         return jsonify({"error": str(e)}), 500
+... 
+... if __name__ == '__main__':
+...     puerto = int(os.environ.get('PORT', 5000))
