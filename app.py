@@ -72,6 +72,11 @@ DATOS_POR_DEFECTO = {
         {"id": 3, "nombre": "Neumáticos Maxxis Ardent","descripcion": "Todo terreno, 27.5\" y 29\".",                              "precio": 380.00,  "imagen": "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=600&q=80",  "badge": ""},
         {"id": 4, "nombre": "Kit de Reparación",       "descripcion": "Parches, desmontadores, llave multiusos.",                  "precio": 320.00,  "imagen": "https://images.unsplash.com/photo-1588611910672-87c2b6cb08c1?w=600&q=80",  "badge": ""},
     ],
+    "trabajos": [
+        {"id": 1, "modelo": "Specialized Allez", "color": "Negro Mate / Rojo", "precio": 4500.00, "descripcion": "Restauración completa, pintura personalizada y ajuste de transmisión de ruta.", "imagen": "https://images.unsplash.com/photo-1559268950-2d7ceb2efa3a?w=600&q=80"},
+        {"id": 2, "modelo": "Trek Marlin 5", "color": "Azul Cobalto", "precio": 1850.00, "descripcion": "Mantenimiento preventivo, purga de frenos y cambio de cubiertas.", "imagen": "https://images.unsplash.com/photo-1576435728678-68ce0f6eb293?w=600&q=80"},
+        {"id": 3, "modelo": "Urbana Vintage", "color": "Verde Menta", "precio": 3200.00, "descripcion": "Restauración de cuadro clásico, pintura electrostática y piezas en cuero.", "imagen": "https://images.unsplash.com/photo-1512106374988-c95f566d39ef?w=600&q=80"},
+    ],
     "servicios": [
         {"icono": "🔧", "nombre": "Revisión completa",     "descripcion": "Inspección de frenos, cambios, rodamientos.",        "precio": "Desde $250"},
         {"icono": "⚙️", "nombre": "Cambio de transmisión", "descripcion": "Reemplazo de cadena, cassette, platos.",             "precio": "Desde $350"},
@@ -96,7 +101,7 @@ def fusionar_seguro(base, nuevo):
     res = copy.deepcopy(base)
     if "info" in nuevo and isinstance(nuevo["info"], dict):
         res["info"].update(nuevo["info"])
-    for k in ["bicicletas", "accesorios", "repuestos", "servicios", "marcas", "resenas", "stats", "ubicaciones"]:
+    for k in ["bicicletas", "accesorios", "repuestos", "trabajos", "servicios", "marcas", "resenas", "stats", "ubicaciones"]:
         if k in nuevo:
             res[k] = nuevo[k]
     return res
@@ -253,9 +258,9 @@ ADMIN_TEMPLATE = """
                 </div>
             </div>
 
-            <div v-show="['bicicletas', 'accesorios', 'repuestos'].includes(currentTab)" class="space-y-6">
+            <div v-show="['bicicletas', 'accesorios', 'repuestos', 'trabajos'].includes(currentTab)" class="space-y-6">
                 <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-blue-100">
-                    <h2 class="text-xl font-bold capitalize text-gray-800">Catálogo de {{ currentTab }}</h2>
+                    <h2 class="text-xl font-bold capitalize text-gray-800">Sección: {{ currentTab }}</h2>
                     <button @click="agregarItem(currentTab)" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold text-sm shadow transition">+ Nuevo Artículo</button>
                 </div>
 
@@ -267,7 +272,7 @@ ADMIN_TEMPLATE = """
                         <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre / Modelo</label>
-                                <input v-if="currentTab === 'bicicletas'" v-model="item.modelo" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none">
+                                <input v-if="['bicicletas', 'trabajos'].includes(currentTab)" v-model="item.modelo" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none">
                                 <input v-else v-model="item.nombre" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none">
                             </div>
                             <div>
@@ -278,9 +283,12 @@ ADMIN_TEMPLATE = """
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label><textarea v-model="item.descripcion" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none h-16"></textarea></div>
-                        <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL de la imagen</label><input v-model="item.imagen" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none" placeholder="https://..."></div>
-                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Etiqueta (Nuevo, Oferta…)</label><input v-model="item.badge" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none"></div>
+                        <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL de la imagen (o pega link normal de Drive)</label><input v-model="item.imagen" @change="formatearDriveLink(item)" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none" placeholder="https://..."></div>
+                        
+                        <!-- Campos específicos por pestaña -->
+                        <div v-if="['accesorios', 'repuestos', 'bicicletas'].includes(currentTab)"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Etiqueta (Nuevo, Oferta…)</label><input v-model="item.badge" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none"></div>
                         <div v-if="currentTab === 'bicicletas'"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Talla / Aro</label><input v-model="item.talla" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none"></div>
+                        <div v-if="currentTab === 'trabajos'"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Color / Estilo Aplicado</label><input v-model="item.color" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none" placeholder="Ej: Rojo Candy"></div>
                     </div>
                 </div>
                 <div v-if="!datos[currentTab] || datos[currentTab].length === 0" class="text-center p-8 text-gray-500 bg-white rounded-lg shadow border-2 border-dashed border-gray-300">
@@ -316,8 +324,15 @@ ADMIN_TEMPLATE = """
         data() {
             return {
                 cargando: true, guardando: false, mensaje: '', currentTab: 'info',
-                tabs: [{ id: 'info', nombre: '⚙️ General' }, { id: 'bicicletas', nombre: '🚲 Bicis' }, { id: 'accesorios', nombre: '🪖 Accesorios' }, { id: 'repuestos', nombre: '🔩 Repuestos' }, { id: 'ubicaciones', nombre: '📍 Ubicaciones' }],
-                datos: { info: {}, bicicletas: [], accesorios: [], repuestos: [], ubicaciones: [] }, horariosTexto: '',
+                tabs: [
+                    { id: 'info', nombre: '⚙️ General' }, 
+                    { id: 'bicicletas', nombre: '🚲 Bicis' }, 
+                    { id: 'accesorios', nombre: '🪖 Accesorios' }, 
+                    { id: 'repuestos', nombre: '🔩 Repuestos' }, 
+                    { id: 'trabajos', nombre: '📸 Trabajos' }, 
+                    { id: 'ubicaciones', nombre: '📍 Ubicaciones' }
+                ],
+                datos: { info: {}, bicicletas: [], accesorios: [], repuestos: [], trabajos: [], ubicaciones: [] }, horariosTexto: '',
             };
         },
         methods: {
@@ -325,19 +340,31 @@ ADMIN_TEMPLATE = """
                 try {
                     const res  = await fetch('/api/datos');
                     const data = await res.json();
-                    this.datos = Object.assign({ info: {}, bicicletas: [], accesorios: [], repuestos: [], ubicaciones: [] }, data);
+                    this.datos = Object.assign({ info: {}, bicicletas: [], accesorios: [], repuestos: [], trabajos: [], ubicaciones: [] }, data);
                     if (this.datos.info.horarios) this.horariosTexto = this.datos.info.horarios.map(h => h.dia + ': ' + h.hora).join('\\n');
                 } catch(e) { alert('Error cargando datos.'); } finally { this.cargando = false; }
             },
             agregarItem(cat) {
                 if (!this.datos[cat]) this.datos[cat] = [];
-                const nuevo = { id: Date.now(), descripcion: '', precio: 0, imagen: '', badge: '' };
-                if (cat === 'bicicletas') { nuevo.modelo = 'Nueva Bici'; nuevo.talla = ''; } 
+                const nuevo = { id: Date.now(), descripcion: '', precio: 0, imagen: '' };
+                if (cat === 'bicicletas') { nuevo.modelo = 'Nueva Bici'; nuevo.talla = ''; nuevo.badge = ''; } 
+                else if (cat === 'trabajos') { nuevo.modelo = 'Nuevo Trabajo'; nuevo.color = ''; } 
                 else if (cat === 'ubicaciones') { nuevo.nombre = 'Nueva Sucursal'; nuevo.direccion = ''; nuevo.maps_embed = ''; }
-                else { nuevo.nombre = 'Nuevo Artículo'; }
+                else { nuevo.nombre = 'Nuevo Artículo'; nuevo.badge = ''; }
                 this.datos[cat].unshift(nuevo);
             },
             eliminarItem(cat, idx) { if (confirm('¿Eliminar este artículo?')) this.datos[cat].splice(idx, 1); },
+            formatearDriveLink(item) {
+                // Función Mágica: Convierte links de Drive en links directos de imagen
+                if (item.imagen && item.imagen.includes('drive.google.com/file/d/')) {
+                    const match = item.imagen.match(/d\\/([a-zA-Z0-9_-]+)/);
+                    if (match && match[1]) {
+                        item.imagen = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                        this.mensaje = '✅ Link de Drive convertido automáticamente';
+                        setTimeout(() => this.mensaje = '', 3000);
+                    }
+                }
+            },
             async guardarCambios() {
                 this.guardando = true; this.mensaje = '';
                 if (this.horariosTexto) {
@@ -368,16 +395,15 @@ HTML_TEMPLATE = """
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  /* Nuevo Tema Claro: Azul, Blanco, Morado */
-  --bg-main: #F8FAFC;       /* Fondo principal (Blanco/Gris muy claro) */
-  --bg-sec: #EFF6FF;        /* Fondo secundario (Azul muy clarito) */
-  --bg-card: #FFFFFF;       /* Fondo de las tarjetas (Blanco puro) */
-  --primary: #2563EB;       /* Azul Principal vibrante */
+  /* Tema Claro: Azul, Blanco, Morado */
+  --bg-main: #F8FAFC;       /* Fondo principal */
+  --bg-sec: #EFF6FF;        /* Fondo secundario */
+  --bg-card: #FFFFFF;       /* Fondo de tarjetas */
+  --primary: #2563EB;       /* Azul Principal */
   --accent: #9333EA;        /* Morado para acentos y precios */
-  --text-dark: #0F172A;     /* Texto principal (Casi negro/Azul marino) */
-  --text-muted: #64748B;    /* Texto secundario (Gris pizarra) */
+  --text-dark: #0F172A;     /* Texto principal */
+  --text-muted: #64748B;    /* Texto secundario */
   --border-color: #E2E8F0;  /* Líneas divisorias */
-  --bike-color: #2563EB;    /* Color de inicio para el Customizer */
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg-main);color:var(--text-dark);font-family:'Barlow',sans-serif;overflow-x:hidden;cursor:none;}
@@ -389,7 +415,7 @@ body{background:var(--bg-main);color:var(--text-dark);font-family:'Barlow',sans-
 
 /* Navigation */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.1rem 3rem;background:rgba(255,255,255,.97);border-bottom:1px solid var(--border-color);backdrop-filter:blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.03);}
-.logo{font-family:'Bebas Neue',cursive;font-size:1.8rem;letter-spacing:.1em;color:var(--text-dark);text-decoration:none; cursor:pointer;}
+.logo{font-family:'Bebas Neue',cursive;font-size:1.8rem;letter-spacing:.1em;color:var(--text-dark);text-decoration:none; cursor:pointer; background:none; border:none;}
 .logo span{color:var(--primary);}
 .nav-links{display:flex;gap:2rem;list-style:none;}
 .nav-links button{background:none; border:none; color:var(--text-muted); font-family:'Barlow'; font-size:.82rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:color .2s;}
@@ -402,7 +428,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .mob-menu button, .mob-menu a{display:block; width:100%; text-align:left; background:none; border:none; color:var(--text-muted);text-decoration:none;font-size:.9rem;font-family:'Barlow'; font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 0;border-bottom:1px solid var(--border-color);cursor:pointer; transition:color .2s;}
 .mob-menu button:hover, .mob-menu a:hover{color:var(--primary);}
 
-/* --- SPA (Single Page Application) Logic --- */
+/* --- SPA Logic --- */
 .page-section { display: none; min-height: 100vh; padding-top: 80px; animation: fadeIn 0.4s ease-out forwards; }
 .page-section.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
@@ -439,26 +465,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .marquee-inner span{font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:.2em;color:#fff;margin:0 2rem;}
 .marquee-inner span.dot{color:rgba(255,255,255,.5);font-size:.9rem;margin:0;}
 
-/* Customizer (Mostrador Realista) */
-.customizer-wrap { padding: 4rem 3rem; }
-.custom-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 3rem; align-items: start; margin-top: 2rem; }
-.realistic-viewer { background: var(--bg-sec); border-radius: 16px; overflow: hidden; position: relative; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.04); }
-.realistic-img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: opacity 0.3s ease, transform 0.5s ease; }
-.realistic-img.loading { opacity: 0.3; transform: scale(1.02); filter: blur(4px); }
-.viewer-tag { position: absolute; top: 1.5rem; left: 1.5rem; background: rgba(255,255,255,0.9); padding: 0.4rem 1rem; border-radius: 30px; font-weight: 800; font-size: 0.75rem; color: var(--text-dark); box-shadow: 0 4px 10px rgba(0,0,0,0.05); letter-spacing: 0.1em; text-transform: uppercase; z-index: 10; backdrop-filter: blur(5px); }
-
-.tools-panel { background: var(--bg-card); padding: 2rem; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);}
-.tool-title { font-family: 'Barlow Condensed'; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem; border-bottom: 2px solid var(--bg-main); padding-bottom: .5rem; color:var(--text-dark);}
-.model-selector { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 2.5rem; }
-.model-btn { background: transparent; border: 2px solid var(--border-color); color: var(--text-muted); padding: .8rem 1rem; font-family: 'Barlow'; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; cursor: pointer; transition: all .2s; text-align: left; display:flex; justify-content:space-between; align-items:center; border-radius:8px;}
-.model-btn:hover, .model-btn.active { background: var(--bg-sec); border-color: var(--primary); color: var(--primary); }
-.model-btn.active::after { content: '✓'; color: var(--primary); font-weight: 900;}
-
-.color-palette { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-.color-swatch { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 3px solid #cbd5e1; cursor: pointer; transition: transform .2s, border-color .2s; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);}
-.color-swatch:hover { transform: scale(1.1); border-color: #94a3b8;}
-.color-swatch.active { border-color: var(--accent); transform: scale(1.15); box-shadow: 0 0 15px rgba(147,51,234,0.3);}
-
 /* Services */
 .services{padding:4rem 3rem;}
 .services-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3rem;flex-wrap:wrap;gap:1rem;}
@@ -470,7 +476,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .service-desc{color:var(--text-muted);font-size:.88rem;line-height:1.6; font-weight:500;}
 .service-price{margin-top:1.2rem;font-family:'Barlow Condensed';font-size:1.1rem;font-weight:700;color:var(--accent);}
 
-/* Catalog */
+/* Catalog & Portfolio (Trabajos) */
 .catalog{padding:4rem 3rem; background: var(--bg-sec);}
 .catalog-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
 .filters{display:flex;gap:.5rem;margin-bottom:2.5rem;flex-wrap:wrap;}
@@ -565,8 +571,7 @@ footer{background:var(--text-dark);padding:4rem 3rem 2rem;}
 @media(max-width:768px){
   nav{padding:1rem 1.5rem;}.nav-links{display:none;}.hamburger{display:flex;}
   .hero{grid-template-columns:1fr;}.hero-right{min-height:320px;}.hero-left{padding:3rem 1.5rem;}
-  .services,.catalog,.testimonials, .customizer-wrap{padding:3rem 1.5rem;}
-  .custom-grid{grid-template-columns:1fr;}
+  .services,.catalog,.testimonials{padding:3rem 1.5rem;}
   .workshop{grid-template-columns:1fr;}.workshop-left{padding:3.5rem 2rem;}.workshop-right{min-height:300px;}
   .contact{grid-template-columns:1fr;gap:2rem;padding:3rem 1.5rem;}.form-row{grid-template-columns:1fr;}
   .footer-top{grid-template-columns:1fr;}footer{padding:3rem 1.5rem 2rem;}
@@ -582,7 +587,7 @@ footer{background:var(--text-dark);padding:4rem 3rem 2rem;}
   <ul class="nav-links">
     <li><button onclick="changeRoute('servicios')" data-target="servicios">Servicios</button></li>
     <li><button onclick="changeRoute('catalogo')" data-target="catalogo">Catálogo</button></li>
-    <li><button onclick="changeRoute('modificaciones')" data-target="modificaciones">Modificaciones</button></li>
+    <li><button onclick="changeRoute('trabajos')" data-target="trabajos">Trabajos</button></li>
     <li><button onclick="changeRoute('taller')" data-target="taller">Taller</button></li>
     <li><button onclick="changeRoute('contacto')" data-target="contacto">Contacto</button></li>
     <li><a href="https://wa.me/{{ info.whatsapp }}" target="_blank" class="nav-cta">WhatsApp</a></li>
@@ -594,7 +599,7 @@ footer{background:var(--text-dark);padding:4rem 3rem 2rem;}
 <div class="mob-menu" id="mobMenu">
   <button onclick="changeRoute('servicios')">Servicios</button>
   <button onclick="changeRoute('catalogo')">Catálogo</button>
-  <button onclick="changeRoute('modificaciones')">Modificaciones</button>
+  <button onclick="changeRoute('trabajos')">Trabajos</button>
   <button onclick="changeRoute('taller')">Taller</button>
   <button onclick="changeRoute('contacto')">Contacto</button>
   <a href="https://wa.me/{{ info.whatsapp }}" target="_blank">WhatsApp ↗</a>
@@ -611,7 +616,7 @@ footer{background:var(--text-dark);padding:4rem 3rem 2rem;}
         <div class="hero-tag">🔧 Taller profesional & Tienda</div>
         <h1 class="hero-title"><span>Tu bici,</span><span class="accent">tu pasión,</span><span class="outline">nuestro oficio.</span></h1>
         <p class="hero-desc">{{ info.descripcion }}</p>
-        <div class="hero-btns"><button onclick="changeRoute('catalogo')" class="btn-primary">Ver catálogo</button><button onclick="changeRoute('servicios')" class="btn-secondary">Nuestros servicios</button></div>
+        <div class="hero-btns"><button onclick="changeRoute('trabajos')" class="btn-primary">Ver Portafolio</button><button onclick="changeRoute('servicios')" class="btn-secondary">Nuestros servicios</button></div>
         <div class="hero-stats">{% for s in stats %}<div><div class="stat-num">{{ s.numero }}</div><div class="stat-label">{{ s.label }}</div></div>{% endfor %}</div>
       </div>
       <div class="hero-right">
@@ -621,45 +626,51 @@ footer{background:var(--text-dark);padding:4rem 3rem 2rem;}
     </div>
   </section>
 
-  <!-- ================= MODIFICACIONES (REALISTA) ================= -->
-  <section class="page-section" id="modificaciones">
-    <div class="customizer-wrap">
-      <div><div class="section-sub"><span class="line-h"></span>Vista Real</div><h2 class="section-title">Configurador de Estilos</h2></div>
-      
-      <div class="custom-grid">
-        <!-- Visualizador Izquierda -->
-        <div class="realistic-viewer">
-            <div class="viewer-tag" id="viewerTag">Mountain Bike - Oscuro</div>
-            <!-- Imagen base -->
-            <img src="https://images.unsplash.com/photo-1576435728678-68ce0f6eb293?w=1200&q=80" alt="Bicicleta Real" id="realistic-img" class="realistic-img">
-        </div>
+  <!-- ================= SERVICIOS ================= -->
+  <section class="page-section" id="servicios">
+    <div class="services">
+      <div class="services-header"><div><div class="section-sub"><span class="line-h"></span>Lo que hacemos</div><h2 class="section-title">Servicios del taller</h2></div><button onclick="changeRoute('contacto')" class="btn-secondary">Agendar cita →</button></div>
+      <div class="services-grid">{% for s in servicios %}<div class="service-card"><span class="service-icon">{{ s.icono }}</span><div class="service-name">{{ s.nombre }}</div><div class="service-desc">{{ s.descripcion }}</div><div class="service-price">{{ s.precio }}</div></div>{% endfor %}</div>
+    </div>
+  </section>
 
-        <!-- Panel de Herramientas Derecha -->
-        <div class="tools-panel">
-            <div class="tool-title">1. Selecciona el Modelo</div>
-            <div class="model-selector">
-                <button class="model-btn active" data-model="mtb" onclick="setBike('mtb', this)">Mountain Bike (MTB)</button>
-                <button class="model-btn" data-model="ruta" onclick="setBike('ruta', this)">Bicicleta de Ruta</button>
-                <button class="model-btn" data-model="urbana" onclick="setBike('urbana', this)">Urbana / Paseo</button>
-            </div>
+  <!-- ================= CATÁLOGO ================= -->
+  <section class="page-section" id="catalogo">
+    <div class="catalog">
+      <div class="catalog-header"><div><div class="section-sub"><span class="line-h"></span>Lo que vendemos</div><h2 class="section-title">Catálogo</h2></div></div>
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">Todo</button>
+        <button class="filter-btn" data-filter="bici">Bicicletas</button>
+        <button class="filter-btn" data-filter="accesorio">Accesorios</button>
+        <button class="filter-btn" data-filter="repuesto">Repuestos</button>
+      </div>
+      <div class="catalog-grid">
+        {% for b in bicicletas %}<div class="product-card" data-cat="bici" data-img="{{ b.imagen }}" data-name="{{ b.modelo }}" data-cat-label="Bicicleta" data-desc="{{ b.descripcion }}" data-price="${{ '{:,.0f}'.format(b.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ b.imagen }}" alt="{{ b.modelo }}" loading="lazy">{% if b.badge %}<span class="prod-badge">{{ b.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Bicicleta</div><div class="prod-name">{{ b.modelo }}</div><div class="prod-desc">{{ b.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(b.precio) }}<br><small>{{ b.talla }}</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
+        {% for a in accesorios %}<div class="product-card" data-cat="accesorio" data-img="{{ a.imagen }}" data-name="{{ a.nombre }}" data-cat-label="Accesorio" data-desc="{{ a.descripcion }}" data-price="${{ '{:,.0f}'.format(a.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ a.imagen }}" alt="{{ a.nombre }}" loading="lazy">{% if a.badge %}<span class="prod-badge">{{ a.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Accesorio</div><div class="prod-name">{{ a.nombre }}</div><div class="prod-desc">{{ a.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(a.precio) }}<br><small>MXN</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
+        {% for r in repuestos %}<div class="product-card" data-cat="repuesto" data-img="{{ r.imagen }}" data-name="{{ r.nombre }}" data-cat-label="Repuesto" data-desc="{{ r.descripcion }}" data-price="${{ '{:,.0f}'.format(r.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ r.imagen }}" alt="{{ r.nombre }}" loading="lazy">{% if r.badge %}<span class="prod-badge">{{ r.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Repuesto</div><div class="prod-name">{{ r.nombre }}</div><div class="prod-desc">{{ r.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(r.precio) }}<br><small>MXN</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
+      </div>
+    </div>
+  </section>
 
-            <div class="tool-title">2. Color del Cuadro</div>
-            <div class="color-palette">
-                <!-- 8 colores base para un catálogo realista más amplio -->
-                <div class="color-swatch active" data-color="oscuro" style="background:#1E293B;" onclick="setColor('oscuro', this)"></div>
-                <div class="color-swatch" data-color="rojo" style="background:#E63946;" onclick="setColor('rojo', this)"></div>
-                <div class="color-swatch" data-color="azul" style="background:#2563EB;" onclick="setColor('azul', this)"></div>
-                <div class="color-swatch" data-color="claro" style="background:#F8FAFC;" onclick="setColor('claro', this)"></div>
-                <div class="color-swatch" data-color="verde" style="background:#10B981;" onclick="setColor('verde', this)"></div>
-                <div class="color-swatch" data-color="naranja" style="background:#F59E0B;" onclick="setColor('naranja', this)"></div>
-                <div class="color-swatch" data-color="morado" style="background:#9333EA;" onclick="setColor('morado', this)"></div>
-                <div class="color-swatch" data-color="plata" style="background:#94A3B8;" onclick="setColor('plata', this)"></div>
-            </div>
-            
-            <div style="margin-top: 2.5rem;">
-                <button onclick="changeRoute('contacto')" class="btn-primary" style="width:100%; text-align:center;">Cotizar este diseño</button>
+  <!-- ================= TRABAJOS (PORTAFOLIO) ================= -->
+  <section class="page-section" id="trabajos">
+    <div class="catalog" style="background: var(--bg-main);">
+      <div class="catalog-header"><div><div class="section-sub"><span class="line-h"></span>Nuestro Orgullo</div><h2 class="section-title">Trabajos Realizados</h2></div></div>
+      <div class="catalog-grid">
+        {% for t in trabajos %}
+        <div class="product-card" data-img="{{ t.imagen }}" data-name="{{ t.modelo }}" data-cat-label="Trabajo Entregado" data-desc="{{ t.descripcion }}" data-price="${{ '{:,.0f}'.format(t.precio) }} MXN" onclick="openModal(this)">
+            <div class="prod-img"><img src="{{ t.imagen }}" alt="{{ t.modelo }}" loading="lazy"></div>
+            <div class="prod-info">
+                <div class="prod-cat" style="color:var(--accent);">Color: {{ t.color }}</div>
+                <div class="prod-name">{{ t.modelo }}</div>
+                <div class="prod-desc">{{ t.descripcion }}</div>
+                <div class="prod-footer">
+                    <div class="prod-price">${{ '{:,.0f}'.format(t.precio) }}<br><small>Trabajo</small></div>
+                    <button class="btn-add">Ver más</button>
+                </div>
             </div>
         </div>
+        {% endfor %}
       </div>
     </div>
   </section>
@@ -721,7 +732,7 @@ footer{background:var(--text-dark);padding:4rem 3rem 2rem;}
       <div><form class="contact-form" id="contactForm">
         <div class="form-row"><div class="form-field"><label class="form-label">Nombre</label><input type="text" class="form-input" id="fname" placeholder="Tu nombre" required></div><div class="form-field"><label class="form-label">Teléfono</label><input type="tel" class="form-input" id="fphone" placeholder="+52 55 ..."></div></div>
         <div class="form-field"><label class="form-label">Email</label><input type="email" class="form-input" id="femail" placeholder="tu@email.com" required></div>
-        <div class="form-field"><label class="form-label">¿En qué podemos ayudarte?</label><select class="form-select" id="fservicio"><option value="">Selecciona una opción</option>{% for s in servicios %}<option>{{ s.nombre }}</option>{% endfor %}<option>Compra de bicicleta</option><option>Modificación / Pintura</option><option>Otro</option></select></div>
+        <div class="form-field"><label class="form-label">¿En qué podemos ayudarte?</label><select class="form-select" id="fservicio"><option value="">Selecciona una opción</option>{% for s in servicios %}<option>{{ s.nombre }}</option>{% endfor %}<option>Compra de bicicleta</option><option>Proyecto a Medida</option><option>Otro</option></select></div>
         <div class="form-field"><label class="form-label">Mensaje</label><textarea class="form-textarea" id="fmsg" placeholder="Cuéntanos más..."></textarea></div>
         <button type="submit" class="form-submit">Enviar mensaje →</button>
         <a href="https://wa.me/{{ info.whatsapp }}" target="_blank" class="whatsapp-btn">💬 Escribir por WhatsApp</a>
@@ -734,7 +745,7 @@ footer{background:var(--text-dark);padding:4rem 3rem 2rem;}
 <footer><div class="footer-top">
   <div class="footer-brand"><button onclick="changeRoute('inicio')" class="logo" style="background:none;border:none;">{{ info.nombre[:4] }}<span>{{ info.nombre[4:] }}</span></button><p>{{ info.descripcion }}</p></div>
   <div class="footer-col"><h4>Servicios</h4><ul>{% for s in servicios %}<li><button onclick="changeRoute('servicios')">{{ s.nombre }}</button></li>{% endfor %}</ul></div>
-  <div class="footer-col"><h4>Tienda</h4><ul><li><button onclick="changeRoute('catalogo')">Bicicletas</button></li><li><button onclick="changeRoute('catalogo')">Accesorios</button></li><li><button onclick="changeRoute('catalogo')">Repuestos</button></li></ul></div>
+  <div class="footer-col"><h4>Tienda</h4><ul><li><button onclick="changeRoute('catalogo')">Bicicletas</button></li><li><button onclick="changeRoute('trabajos')">Portafolio</button></li><li><button onclick="changeRoute('catalogo')">Repuestos</button></li></ul></div>
   <div class="footer-col"><h4>Contacto</h4><ul>{% if info.instagram %}<li><a href="{{ info.instagram }}" target="_blank">Instagram</a></li>{% endif %}{% if info.facebook %}<li><a href="{{ info.facebook }}" target="_blank">Facebook</a></li>{% endif %}<li><a href="https://wa.me/{{ info.whatsapp }}" target="_blank">WhatsApp</a></li><li><a href="/admin">⚙️ Admin</a></li></ul></div>
 </div><div class="footer-bottom"><p>© 2026 {{ info.nombre }}. Todos los derechos reservados.</p><p>Hecho con <span style="color:var(--primary);">♥</span> para los amantes de la bicicleta</p></div></footer>
 
@@ -746,7 +757,7 @@ footer{background:var(--text-dark);padding:4rem 3rem 2rem;}
 // --- Custom Cursor ---
 const cursor=document.getElementById('cursor');
 document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px';});
-document.querySelectorAll('a, button, .product-card, .service-card, .filter-btn, .color-swatch, .model-btn, .modal-close').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('hov'));el.addEventListener('mouseleave',()=>cursor.classList.remove('hov'));});
+document.querySelectorAll('a, button, .product-card, .service-card, .filter-btn, .modal-close').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('hov'));el.addEventListener('mouseleave',()=>cursor.classList.remove('hov'));});
 
 // --- SPA Navigation System ---
 function changeRoute(routeId) {
@@ -785,79 +796,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 document.getElementById('contactForm').addEventListener('submit',async function(e){e.preventDefault();const btn=this.querySelector('.form-submit');btn.textContent='Enviando...';btn.disabled=true;try{const res=await fetch('/contacto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:document.getElementById('fname').value,telefono:document.getElementById('fphone').value,email:document.getElementById('femail').value,servicio:document.getElementById('fservicio').value,mensaje:document.getElementById('fmsg').value})});const data=await res.json();showToast(data.ok?'✅ Mensaje enviado. Te contactamos pronto.':'⚠️ Error al enviar.');if(data.ok)this.reset();}catch{showToast('⚠️ Error. Escríbenos por WhatsApp.');}btn.textContent='Enviar mensaje →';btn.disabled=false;});
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);}
 
-// --- Realistic Customizer Logic ---
-const realisticImg = document.getElementById('realistic-img');
-const viewerTag = document.getElementById('viewerTag');
-let currentModel = 'mtb';
-let currentColor = 'oscuro';
-
-// Diccionario con fotografías 100% reales en alta calidad (Añadidos 4 colores extra)
-const bikePhotos = {
-    'mtb': {
-        'oscuro': 'https://images.unsplash.com/photo-1576435728678-68ce0f6eb293?w=1200&q=80',
-        'rojo': 'https://images.unsplash.com/photo-1558981359-219d6364c9c8?w=1200&q=80',
-        'azul': 'https://images.unsplash.com/photo-1563212044-773df40fa2dd?w=1200&q=80',
-        'claro': 'https://images.unsplash.com/photo-1544191696-102dbdaeeaa0?w=1200&q=80',
-        'verde': 'https://images.unsplash.com/photo-1605553535914-41d3faec95eb?w=1200&q=80',
-        'naranja': 'https://images.unsplash.com/photo-1533560904424-a0c61dc306fc?w=1200&q=80',
-        'morado': 'https://images.unsplash.com/photo-1593018867503-4f27c73a21ba?w=1200&q=80',
-        'plata': 'https://images.unsplash.com/photo-1610926950553-ebd024479e39?w=1200&q=80'
-    },
-    'ruta': {
-        'oscuro': 'https://images.unsplash.com/photo-1571333250630-f0230c320b6d?w=1200&q=80',
-        'rojo': 'https://images.unsplash.com/photo-1511994298241-608e28f14fde?w=1200&q=80',
-        'azul': 'https://images.unsplash.com/photo-1559268950-2d7ceb2efa3a?w=1200&q=80',
-        'claro': 'https://images.unsplash.com/photo-1484920274317-87885fcbc504?w=1200&q=80',
-        'verde': 'https://images.unsplash.com/photo-1525826201389-9fc6267675ce?w=1200&q=80',
-        'naranja': 'https://images.unsplash.com/photo-1505322022379-7c3353ee6291?w=1200&q=80',
-        'morado': 'https://images.unsplash.com/photo-1618886487325-f665032b6352?w=1200&q=80',
-        'plata': 'https://images.unsplash.com/photo-1534787238916-9ba6764efd4f?w=1200&q=80'
-    },
-    'urbana': {
-        'oscuro': 'https://images.unsplash.com/photo-1471506480208-91b3a4cc78be?w=1200&q=80',
-        'rojo': 'https://images.unsplash.com/photo-1507560461415-99731cfa9ace?w=1200&q=80',
-        'azul': 'https://images.unsplash.com/photo-1520113412548-5240224df086?w=1200&q=80',
-        'claro': 'https://images.unsplash.com/photo-1528629297340-d1d466945dc5?w=1200&q=80',
-        'verde': 'https://images.unsplash.com/photo-1512106374988-c95f566d39ef?w=1200&q=80',
-        'naranja': 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&q=80',
-        'morado': 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1200&q=80',
-        'plata': 'https://images.unsplash.com/photo-1622340398608-be6329bb6d7a?w=1200&q=80'
-    }
-};
-
-const modelNames = { 'mtb': 'Mountain Bike', 'ruta': 'Bici de Ruta', 'urbana': 'Urbana / Paseo' };
-const colorNames = { 
-    'oscuro': 'Estilo Oscuro', 'rojo': 'Estilo Rojo', 'azul': 'Estilo Azul', 'claro': 'Estilo Claro',
-    'verde': 'Estilo Verde', 'naranja': 'Estilo Naranja', 'morado': 'Estilo Morado', 'plata': 'Estilo Plata'
-};
-
-function updateViewer() {
-    // Añade efecto de desenfoque mientras carga la nueva foto real
-    realisticImg.classList.add('loading');
-    
-    // Precarga de la nueva imagen
-    const newImg = new Image();
-    newImg.src = bikePhotos[currentModel][currentColor];
-    newImg.onload = () => {
-        realisticImg.src = newImg.src;
-        realisticImg.classList.remove('loading');
-        viewerTag.textContent = `${modelNames[currentModel]} - ${colorNames[currentColor]}`;
-    };
-}
-
-function setBike(model, btnElement) {
-    currentModel = model;
-    document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
-    btnElement.classList.add('active');
-    updateViewer();
-}
-
-function setColor(color, swatchElement) {
-    currentColor = color;
-    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-    swatchElement.classList.add('active');
-    updateViewer();
-}
 </script>
 </body></html>
 """
