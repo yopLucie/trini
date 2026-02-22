@@ -6,8 +6,7 @@ import traceback
 from flask import Flask, render_template_string, jsonify, request, session, redirect, url_for
 
 app = Flask(__name__)
-# Genera una llave segura si no hay una en las variables de entorno
-app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
+app.secret_key = os.environ.get("SECRET_KEY", "llave_super_secreta_velogarage")
 
 # ============================================================
 # ☁️ CONFIGURACIÓN DE LA NUBE (RENDER + GITHUB GISTS) ☁️
@@ -24,9 +23,11 @@ DATOS_POR_DEFECTO = {
         "nombre":      "VeloGarage",
         "slogan":      "Tu bici, tu pasión, nuestro oficio.",
         "descripcion": "Reparamos, equipamos y apasionamos. Taller profesional con más de 12 años de experiencia en bicicletas de ruta, MTB, gravel y e-bikes.",
+        "direccion":   "Av. Reforma 123, Ciudad de México, CDMX",
         "telefono":    "+52 55 1234 5678",
         "whatsapp":    "5215512345678",
         "email":       "hola@velogarage.com.mx",
+        "maps_embed":  "https://maps.google.com/maps?q=Mexico%20City&t=&z=13&ie=UTF8&iwloc=&output=embed",
         "instagram":   "https://instagram.com/velogarage",
         "facebook":    "https://facebook.com/velogarage",
         "banco":       "BBVA",
@@ -177,15 +178,15 @@ LOGIN_TEMPLATE = """
     <title>Login Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 flex items-center justify-center h-screen">
-    <div class="bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-sm">
-        <h2 class="text-2xl font-bold text-white mb-6 text-center text-orange-500">🚲 VeloGarage Admin</h2>
+<body class="bg-blue-50 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm border border-blue-100">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center"><span class="text-blue-600">🚲 Velo</span>Garage Admin</h2>
         {% if error %}<p class="text-red-500 text-sm mb-4 text-center">{{ error }}</p>{% endif %}
         <form method="POST">
             <input type="password" name="password" placeholder="Contraseña de admin" required
-                class="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:border-orange-500 outline-none mb-4">
-            <button type="submit" class="w-full bg-orange-500 text-white font-bold p-3 rounded hover:bg-orange-600">Entrar</button>
-            <a href="/" class="block text-center text-gray-400 mt-4 text-sm hover:text-white">Volver a la tienda</a>
+                class="w-full p-3 rounded bg-gray-50 text-gray-800 border border-gray-300 focus:border-blue-500 outline-none mb-4">
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold p-3 rounded hover:bg-blue-700 transition">Entrar</button>
+            <a href="/" class="block text-center text-gray-500 mt-4 text-sm hover:text-blue-600">Volver a la tienda</a>
         </form>
     </div>
 </body>
@@ -201,17 +202,17 @@ ADMIN_TEMPLATE = """
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
-<body class="bg-gray-100 pb-20">
+<body class="bg-slate-50 pb-20">
     <div id="app">
-        <nav class="bg-gray-900 text-white p-4 sticky top-0 z-50 shadow flex justify-between items-center">
-            <h1 class="font-bold text-lg"><span class="text-orange-500">Velo</span>Garage Admin</h1>
+        <nav class="bg-blue-900 text-white p-4 sticky top-0 z-50 shadow-md flex justify-between items-center">
+            <h1 class="font-bold text-lg"><span class="text-blue-400">Velo</span>Garage Admin</h1>
             <div class="flex gap-4 items-center">
-                <a href="/" target="_blank" class="text-gray-400 text-sm hover:text-white">Ver sitio ↗</a>
+                <a href="/" target="_blank" class="text-blue-200 text-sm hover:text-white">Ver sitio ↗</a>
                 <button @click="guardarCambios" :disabled="guardando"
-                    class="bg-orange-500 px-4 py-2 rounded text-sm font-bold hover:bg-orange-600 shadow disabled:opacity-60">
+                    class="bg-blue-600 px-4 py-2 rounded text-sm font-bold hover:bg-blue-500 shadow disabled:opacity-60 transition">
                     {{ guardando ? 'Guardando...' : '💾 Guardar Cambios' }}
                 </button>
-                <a href="/logout" class="text-gray-400 text-sm hover:text-white">Salir</a>
+                <a href="/logout" class="text-blue-200 text-sm hover:text-white">Salir</a>
             </div>
         </nav>
 
@@ -221,64 +222,65 @@ ADMIN_TEMPLATE = """
             <div class="flex overflow-x-auto gap-2 mb-6 pb-2 border-b border-gray-300">
                 <button v-for="tab in tabs" @click="currentTab = tab.id"
                     :class="['px-4 py-2 rounded-t font-semibold whitespace-nowrap transition-colors',
-                             currentTab === tab.id ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-200']">
+                             currentTab === tab.id ? 'bg-blue-600 text-white shadow-md' : 'bg-white text-gray-600 hover:bg-blue-50']">
                     {{ tab.nombre }}
                 </button>
             </div>
 
-            <div v-show="currentTab === 'info'" class="bg-white p-6 rounded-lg shadow-md space-y-4">
+            <div v-show="currentTab === 'info'" class="bg-white p-6 rounded-lg shadow-md space-y-4 border border-blue-100">
                 <h2 class="text-xl font-bold border-b pb-2 text-gray-800">Información del Negocio</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre</label><input v-model="datos.info.nombre" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Slogan</label><input v-model="datos.info.slogan" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfono Público</label><input v-model="datos.info.telefono" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp (solo números)</label><input v-model="datos.info.whatsapp" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none" placeholder="5215512345678"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label><input v-model="datos.info.email" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Años de experiencia</label><input v-model="datos.info.anios" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Instagram (URL)</label><input v-model="datos.info.instagram" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Facebook (URL)</label><input v-model="datos.info.facebook" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre</label><input v-model="datos.info.nombre" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Slogan</label><input v-model="datos.info.slogan" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfono Público</label><input v-model="datos.info.telefono" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">WhatsApp (solo números)</label><input v-model="datos.info.whatsapp" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none" placeholder="5215512345678"></div>
+                    <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección</label><input v-model="datos.info.direccion" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label><input v-model="datos.info.email" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Años de experiencia</label><input v-model="datos.info.anios" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Instagram (URL)</label><input v-model="datos.info.instagram" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Facebook (URL)</label><input v-model="datos.info.facebook" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
                     
-                    <div class="md:col-span-2 mt-4"><h3 class="text-sm font-bold text-orange-500 uppercase border-b pb-1">Datos Bancarios / Pagos</h3></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Banco</label><input v-model="datos.info.banco" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Titular de la cuenta</label><input v-model="datos.info.titular" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">CLABE Interbancaria</label><input v-model="datos.info.clabe" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none"></div>
-                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL Código QR (Opcional)</label><input v-model="datos.info.qr_pago" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none" placeholder="https://..."></div>
+                    <div class="md:col-span-2 mt-4"><h3 class="text-sm font-bold text-blue-600 uppercase border-b pb-1">Datos Bancarios / Pagos</h3></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Banco</label><input v-model="datos.info.banco" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Titular de la cuenta</label><input v-model="datos.info.titular" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">CLABE Interbancaria</label><input v-model="datos.info.clabe" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL Código QR (Opcional)</label><input v-model="datos.info.qr_pago" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none" placeholder="https://..."></div>
                     
                     <div class="md:col-span-2 mt-4">
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Horarios (uno por línea: Día: Hora)</label>
-                        <textarea v-model="horariosTexto" rows="3" class="w-full border-2 border-gray-200 p-2 rounded focus:border-orange-500 outline-none font-mono text-sm" placeholder="Lunes – Viernes: 9:00 AM – 7:00 PM&#10;Sábado: 10:00 AM – 3:00 PM&#10;Domingo: Cerrado"></textarea>
+                        <textarea v-model="horariosTexto" rows="3" class="w-full border-2 border-gray-200 p-2 rounded focus:border-blue-500 outline-none font-mono text-sm" placeholder="Lunes – Viernes: 9:00 AM – 7:00 PM&#10;Sábado: 10:00 AM – 3:00 PM&#10;Domingo: Cerrado"></textarea>
                     </div>
                 </div>
             </div>
 
             <div v-show="['bicicletas', 'accesorios', 'repuestos'].includes(currentTab)" class="space-y-6">
-                <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-blue-100">
                     <h2 class="text-xl font-bold capitalize text-gray-800">Catálogo de {{ currentTab }}</h2>
                     <button @click="agregarItem(currentTab)" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold text-sm shadow transition">+ Nuevo Artículo</button>
                 </div>
 
-                <div v-for="(item, index) in datos[currentTab]" :key="index" class="bg-white p-5 rounded-lg shadow-md border-l-4 border-orange-500 relative hover:shadow-lg transition-shadow">
+                <div v-for="(item, index) in datos[currentTab]" :key="index" class="bg-white p-5 rounded-lg shadow-md border-l-4 border-blue-500 relative hover:shadow-lg transition-shadow">
                     <button @click="eliminarItem(currentTab, index)" class="absolute top-3 right-3 text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-full w-8 h-8 flex items-center justify-center font-bold">&times;</button>
                     <div class="flex items-start gap-4 mb-4">
                         <img v-if="item.imagen" :src="item.imagen" class="w-20 h-20 object-cover rounded border border-gray-200" alt="">
-                        <div v-else class="w-20 h-20 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-xs text-gray-400 text-center">Sin<br>imagen</div>
+                        <div v-else class="w-20 h-20 bg-gray-50 rounded border border-gray-200 flex items-center justify-center text-xs text-gray-400 text-center">Sin<br>imagen</div>
                         <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre / Modelo</label>
-                                <input v-if="currentTab === 'bicicletas'" v-model="item.modelo" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none">
-                                <input v-else v-model="item.nombre" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none">
+                                <input v-if="currentTab === 'bicicletas'" v-model="item.modelo" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none">
+                                <input v-else v-model="item.nombre" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Precio ($ MXN)</label>
-                                <input type="number" v-model="item.precio" class="w-full border-2 border-gray-200 p-2 rounded text-sm font-bold text-green-600 focus:border-orange-500 outline-none">
+                                <input type="number" v-model="item.precio" class="w-full border-2 border-gray-200 p-2 rounded text-sm font-bold text-purple-600 focus:border-blue-500 outline-none">
                             </div>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label><textarea v-model="item.descripcion" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none h-16"></textarea></div>
-                        <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL de la imagen</label><input v-model="item.imagen" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none" placeholder="https://..."></div>
-                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Etiqueta (Nuevo, Oferta…)</label><input v-model="item.badge" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none"></div>
-                        <div v-if="currentTab === 'bicicletas'"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Talla / Aro</label><input v-model="item.talla" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none"></div>
+                        <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Descripción</label><textarea v-model="item.descripcion" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none h-16"></textarea></div>
+                        <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL de la imagen</label><input v-model="item.imagen" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none" placeholder="https://..."></div>
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Etiqueta (Nuevo, Oferta…)</label><input v-model="item.badge" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none"></div>
+                        <div v-if="currentTab === 'bicicletas'"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Talla / Aro</label><input v-model="item.talla" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none"></div>
                     </div>
                 </div>
                 <div v-if="!datos[currentTab] || datos[currentTab].length === 0" class="text-center p-8 text-gray-500 bg-white rounded-lg shadow border-2 border-dashed border-gray-300">
@@ -287,17 +289,17 @@ ADMIN_TEMPLATE = """
             </div>
 
             <div v-show="currentTab === 'ubicaciones'" class="space-y-6">
-                <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-blue-100">
                     <h2 class="text-xl font-bold capitalize text-gray-800">Ubicaciones / Sucursales</h2>
                     <button @click="agregarItem('ubicaciones')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded font-bold text-sm shadow transition">+ Nueva Ubicación</button>
                 </div>
 
-                <div v-for="(item, index) in datos.ubicaciones" :key="index" class="bg-white p-5 rounded-lg shadow-md border-l-4 border-orange-500 relative hover:shadow-lg transition-shadow">
+                <div v-for="(item, index) in datos.ubicaciones" :key="index" class="bg-white p-5 rounded-lg shadow-md border-l-4 border-blue-500 relative hover:shadow-lg transition-shadow">
                     <button @click="eliminarItem('ubicaciones', index)" class="absolute top-3 right-3 text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-full w-8 h-8 flex items-center justify-center font-bold">&times;</button>
                     <div class="grid grid-cols-1 gap-3">
-                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre (Ej: Matriz, Sucursal Sur)</label><input v-model="item.nombre" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none"></div>
-                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección Completa</label><input v-model="item.direccion" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none"></div>
-                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL de Google Maps (Solo el enlace src="...")</label><input v-model="item.maps_embed" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-orange-500 outline-none" placeholder="https://www.google.com/maps/embed?pb=..."></div>
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre (Ej: Matriz, Sucursal Sur)</label><input v-model="item.nombre" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none"></div>
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección Completa</label><input v-model="item.direccion" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none"></div>
+                        <div><label class="block text-xs font-bold text-gray-500 uppercase mb-1">URL de Google Maps (Solo el enlace src="...")</label><input v-model="item.maps_embed" class="w-full border-2 border-gray-200 p-2 rounded text-sm focus:border-blue-500 outline-none" placeholder="https://www.google.com/maps/embed?pb=..."></div>
                     </div>
                 </div>
                 <div v-if="!datos.ubicaciones || datos.ubicaciones.length === 0" class="text-center p-8 text-gray-500 bg-white rounded-lg shadow border-2 border-dashed border-gray-300">
@@ -306,7 +308,7 @@ ADMIN_TEMPLATE = """
             </div>
 
         </div>
-        <div v-if="mensaje" class="fixed bottom-4 right-4 bg-gray-900 text-white border-l-4 border-orange-500 px-6 py-4 rounded shadow-2xl font-bold">{{ mensaje }}</div>
+        <div v-if="mensaje" class="fixed bottom-4 right-4 bg-blue-900 text-white border-l-4 border-blue-400 px-6 py-4 rounded shadow-2xl font-bold">{{ mensaje }}</div>
     </div>
     <script>
     const { createApp } = Vue;
@@ -365,306 +367,528 @@ HTML_TEMPLATE = """
 <title>{{ info.nombre }} — Taller & Tienda de Bicicletas</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;600;700&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
 <style>
-:root{--black:#0a0a0a;--dark:#111111;--card:#1a1a1a;--orange:#FF5500;--yellow:#FFD000;--white:#f5f5f0;--gray:#888;--lg:#2a2a2a;}
+:root {
+  /* Nuevo Tema Claro: Azul, Blanco, Morado */
+  --bg-main: #F8FAFC;       /* Fondo principal (Blanco/Gris muy claro) */
+  --bg-sec: #EFF6FF;        /* Fondo secundario (Azul muy clarito) */
+  --bg-card: #FFFFFF;       /* Fondo de las tarjetas (Blanco puro) */
+  --primary: #2563EB;       /* Azul Principal vibrante */
+  --accent: #9333EA;        /* Morado para acentos y precios */
+  --text-dark: #0F172A;     /* Texto principal (Casi negro/Azul marino) */
+  --text-muted: #64748B;    /* Texto secundario (Gris pizarra) */
+  --border-color: #E2E8F0;  /* Líneas divisorias */
+  --bike-color: #2563EB;    /* Color de inicio para el Customizer */
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{background:var(--black);color:var(--white);font-family:'Barlow',sans-serif;overflow-x:hidden;cursor:none;}
-.cursor{width:12px;height:12px;background:var(--orange);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;}
-.cursor.hov{width:38px;height:38px;background:rgba(255,85,0,.2);border:2px solid var(--orange);}
+body{background:var(--bg-main);color:var(--text-dark);font-family:'Barlow',sans-serif;overflow-x:hidden;cursor:none;}
+
+/* Custom Cursor */
+.cursor{width:12px;height:12px;background:var(--primary);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;}
+.cursor.hov{width:38px;height:38px;background:rgba(37,99,235,.15);border:2px solid var(--primary);}
 @media(pointer:coarse){.cursor{display:none;}body{cursor:auto;}}
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.1rem 3rem;background:rgba(10,10,10,.97);border-bottom:1px solid #1e1e1e;backdrop-filter:blur(10px);}
-.logo{font-family:'Bebas Neue',cursive;font-size:1.8rem;letter-spacing:.1em;color:var(--white);text-decoration:none;}
-.logo span{color:var(--orange);}
-.nav-links{display:flex;gap:2.5rem;list-style:none;}
-.nav-links a{color:var(--gray);text-decoration:none;font-size:.82rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;transition:color .2s;}
-.nav-links a:hover{color:var(--orange);}
-.nav-cta{background:var(--orange)!important;color:var(--white)!important;padding:.45rem 1.2rem;}
+
+/* Navigation */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.1rem 3rem;background:rgba(255,255,255,.97);border-bottom:1px solid var(--border-color);backdrop-filter:blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.03);}
+.logo{font-family:'Bebas Neue',cursive;font-size:1.8rem;letter-spacing:.1em;color:var(--text-dark);text-decoration:none; cursor:pointer;}
+.logo span{color:var(--primary);}
+.nav-links{display:flex;gap:2rem;list-style:none;}
+.nav-links button{background:none; border:none; color:var(--text-muted); font-family:'Barlow'; font-size:.82rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:color .2s;}
+.nav-links button:hover, .nav-links button.active-link {color:var(--primary);}
+.nav-cta{background:var(--primary)!important;color:#fff!important;padding:.45rem 1.2rem; text-decoration:none; font-size:.82rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase; display:flex; align-items:center; border-radius:4px;}
 .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px;}
-.hamburger span{display:block;width:24px;height:2px;background:var(--white);}
-.mob-menu{display:none;position:fixed;top:62px;left:0;right:0;background:rgba(10,10,10,.98);padding:2rem 3rem;border-bottom:1px solid #222;z-index:99;}
+.hamburger span{display:block;width:24px;height:2px;background:var(--text-dark);}
+.mob-menu{display:none;position:fixed;top:62px;left:0;right:0;background:rgba(255,255,255,.98);padding:2rem 3rem;border-bottom:1px solid var(--border-color);z-index:99; box-shadow: 0 10px 20px rgba(0,0,0,0.05);}
 .mob-menu.open{display:block;}
-.mob-menu a{display:block;color:var(--gray);text-decoration:none;font-size:.9rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 0;border-bottom:1px solid #1a1a1a;transition:color .2s;}
-.mob-menu a:hover{color:var(--orange);}
-.hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;padding-top:65px;position:relative;overflow:hidden;}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(255,85,0,.08) 0%,transparent 60%);pointer-events:none;}
-.hero-left{display:flex;flex-direction:column;justify-content:center;padding:5rem 3rem;}
-.hero-tag{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,85,0,.1);border:1px solid rgba(255,85,0,.3);color:var(--orange);font-size:.72rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:.4rem 1rem;margin-bottom:1.5rem;width:fit-content;}
-.hero-title{font-family:'Bebas Neue',cursive;font-size:clamp(3.5rem,7vw,7rem);line-height:.92;letter-spacing:.02em;margin-bottom:1.5rem;}
-.hero-title .accent{color:var(--orange);display:block;}
-.hero-title .outline{-webkit-text-stroke:2px var(--white);color:transparent;display:block;}
-.hero-desc{color:var(--gray);font-size:.95rem;line-height:1.7;max-width:400px;margin-bottom:2.5rem;}
-.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;}
-.btn-primary{background:var(--orange);color:var(--white);padding:.85rem 2rem;font-family:'Barlow';font-weight:700;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;transition:background .2s,transform .2s;display:inline-block;}
-.btn-primary:hover{background:#ff7733;transform:translateY(-2px);}
-.btn-secondary{background:transparent;color:var(--white);padding:.85rem 2rem;font-family:'Barlow';font-weight:700;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:1px solid #444;cursor:pointer;transition:border-color .2s,transform .2s;display:inline-block;}
-.btn-secondary:hover{border-color:var(--white);transform:translateY(-2px);}
-.hero-stats{display:flex;gap:2.5rem;margin-top:3.5rem;flex-wrap:wrap;}
-.stat-num{font-family:'Barlow Condensed';font-size:2.3rem;font-weight:900;color:var(--yellow);}
-.stat-label{font-size:.72rem;color:var(--gray);letter-spacing:.1em;text-transform:uppercase;}
-.hero-right{position:relative;overflow:hidden;}
-.hero-img{width:100%;height:100%;min-height:600px;object-fit:cover;filter:grayscale(30%) contrast(1.1);}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,var(--black) 0%,transparent 30%,transparent 70%,rgba(0,0,0,.4) 100%);}
-.hero-badge{position:absolute;bottom:3rem;right:2rem;background:var(--orange);width:105px;height:105px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:spin 8s linear infinite;}
-.hero-badge span{font-family:'Bebas Neue';font-size:.95rem;letter-spacing:.1em;color:var(--white);line-height:1.1;text-align:center;}
-.marquee-wrap{background:var(--orange);padding:.75rem 0;overflow:hidden;white-space:nowrap;}
-.marquee-inner{display:inline-block;animation:marquee 22s linear infinite;}
-.marquee-inner span{font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:.2em;color:var(--black);margin:0 2rem;}
-.marquee-inner span.dot{color:rgba(0,0,0,.4);font-size:.9rem;margin:0;}
+.mob-menu button, .mob-menu a{display:block; width:100%; text-align:left; background:none; border:none; color:var(--text-muted);text-decoration:none;font-size:.9rem;font-family:'Barlow'; font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:.7rem 0;border-bottom:1px solid var(--border-color);cursor:pointer; transition:color .2s;}
+.mob-menu button:hover, .mob-menu a:hover{color:var(--primary);}
+
+/* --- SPA (Single Page Application) Logic --- */
+.page-section { display: none; min-height: 100vh; padding-top: 80px; animation: fadeIn 0.4s ease-out forwards; }
+.page-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Global Section Styles */
 .section-title{font-family:'Bebas Neue',cursive;font-size:clamp(2.2rem,4.5vw,3.8rem);letter-spacing:.05em;line-height:1;}
-.section-sub{color:var(--orange);font-size:.72rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;margin-bottom:.6rem;}
-.line-h{width:50px;height:2px;background:var(--orange);display:inline-block;vertical-align:middle;margin-right:.8rem;}
-.services{padding:6rem 3rem;}
+.section-sub{color:var(--primary);font-size:.72rem;font-weight:700;letter-spacing:.25em;text-transform:uppercase;margin-bottom:.6rem;}
+.line-h{width:50px;height:3px;background:var(--primary);display:inline-block;vertical-align:middle;margin-right:.8rem; border-radius:2px;}
+.btn-primary{background:var(--primary);color:#fff;padding:.85rem 2rem;font-family:'Barlow';font-weight:700;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:none;cursor:pointer;transition:background .2s,transform .2s;display:inline-block; border-radius:4px;}
+.btn-primary:hover{background:#1D4ED8;transform:translateY(-2px); box-shadow: 0 10px 15px rgba(37,99,235,0.2);}
+.btn-secondary{background:transparent;color:var(--text-dark);padding:.85rem 2rem;font-family:'Barlow';font-weight:700;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;border:2px solid var(--border-color);cursor:pointer;transition:all .2s;display:inline-block; border-radius:4px;}
+.btn-secondary:hover{border-color:var(--primary); color:var(--primary); transform:translateY(-2px);}
+
+/* Hero Section */
+.hero{display:grid;grid-template-columns:1fr 1fr;position:relative;overflow:hidden; padding-top:0;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(37,99,235,.08) 0%,transparent 60%);pointer-events:none;}
+.hero-left{display:flex;flex-direction:column;justify-content:center;padding:8rem 3rem 5rem;}
+.hero-tag{display:inline-flex;align-items:center;gap:.5rem;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.3);color:var(--primary);font-size:.72rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;padding:.4rem 1rem;margin-bottom:1.5rem;width:fit-content; border-radius:20px;}
+.hero-title{font-family:'Bebas Neue',cursive;font-size:clamp(3.5rem,7vw,7rem);line-height:.92;letter-spacing:.02em;margin-bottom:1.5rem; color:var(--text-dark);}
+.hero-title .accent{color:var(--primary);display:block;}
+.hero-title .outline{-webkit-text-stroke:2px var(--text-dark);color:transparent;display:block;}
+.hero-desc{color:var(--text-muted);font-size:.95rem;line-height:1.7;max-width:400px;margin-bottom:2.5rem; font-weight: 500;}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap;}
+.hero-stats{display:flex;gap:2.5rem;margin-top:3.5rem;flex-wrap:wrap;}
+.stat-num{font-family:'Barlow Condensed';font-size:2.3rem;font-weight:900;color:var(--accent);}
+.stat-label{font-size:.72rem;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase; font-weight:700;}
+.hero-right{position:relative;overflow:hidden;}
+.hero-img{width:100%;height:100%;min-height:600px;object-fit:cover;}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,var(--bg-main) 0%, rgba(248,250,252,0.85) 25%, transparent 60%, rgba(255,255,255,.2) 100%);}
+
+/* Marquee */
+.marquee-wrap{background:var(--primary);padding:.75rem 0;overflow:hidden;white-space:nowrap;}
+.marquee-inner{display:inline-block;animation:marquee 25s linear infinite;}
+.marquee-inner span{font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:.2em;color:#fff;margin:0 2rem;}
+.marquee-inner span.dot{color:rgba(255,255,255,.5);font-size:.9rem;margin:0;}
+
+/* Customizer (Mostrador 3D) */
+.customizer-wrap { padding: 4rem 3rem; }
+.custom-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 3rem; align-items: center; margin-top: 2rem; }
+.podium-box { background: radial-gradient(circle at center, #ffffff 0%, #e2e8f0 100%); border: 1px solid var(--border-color); border-radius: 12px; padding: 3rem; display: flex; justify-content: center; align-items: center; min-height: 450px; position: relative; overflow: hidden; box-shadow: inset 0 0 50px rgba(0,0,0,0.02);}
+.podium-floor { position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%); width: 80%; height: 100px; background: rgba(0,0,0,0.04); border-radius: 50%; box-shadow: 0 0 50px rgba(147,51,234,0.15); filter: blur(5px); }
+.bike-svg { width: 100%; max-width: 500px; position: relative; z-index: 2; filter: drop-shadow(0 20px 15px rgba(0,0,0,0.15)); transition: all 0.4s ease; }
+.bike-path { transition: stroke 0.4s ease, d 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+.tools-panel { background: var(--bg-card); padding: 2rem; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);}
+.tool-title { font-family: 'Barlow Condensed'; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem; border-bottom: 2px solid var(--bg-main); padding-bottom: .5rem; color:var(--text-dark);}
+.model-selector { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 2.5rem; }
+.model-btn { background: transparent; border: 2px solid var(--border-color); color: var(--text-muted); padding: .8rem 1rem; font-family: 'Barlow'; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; cursor: pointer; transition: all .2s; text-align: left; display:flex; justify-content:space-between; align-items:center; border-radius:4px;}
+.model-btn:hover, .model-btn.active { background: var(--bg-sec); border-color: var(--primary); color: var(--primary); }
+.model-btn.active::after { content: '✓'; color: var(--primary); font-weight: 900;}
+
+.color-palette { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.color-swatch { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 3px solid #cbd5e1; cursor: pointer; transition: transform .2s, border-color .2s; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);}
+.color-swatch:hover { transform: scale(1.1); border-color: #94a3b8;}
+.color-swatch.active { border-color: var(--accent); transform: scale(1.15); box-shadow: 0 0 15px rgba(147,51,234,0.3);}
+
+/* Services */
+.services{padding:4rem 3rem;}
 .services-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:3rem;flex-wrap:wrap;gap:1rem;}
-.services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5px;background:#222;border:1.5px solid #222;}
-.service-card{background:var(--dark);padding:2.5rem 2rem;transition:background .3s;}
-.service-card:hover{background:var(--card);}
+.services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--border-color);border:1px solid var(--border-color); border-radius: 8px; overflow:hidden;}
+.service-card{background:var(--bg-card);padding:2.5rem 2rem;transition:background .3s;}
+.service-card:hover{background:var(--bg-sec);}
 .service-icon{font-size:2rem;margin-bottom:1rem;display:block;}
-.service-name{font-family:'Barlow Condensed';font-size:1.2rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:.7rem;}
-.service-desc{color:var(--gray);font-size:.88rem;line-height:1.6;}
-.service-price{margin-top:1.2rem;font-family:'Barlow Condensed';font-size:1.1rem;font-weight:700;color:var(--yellow);}
-.catalog{padding:6rem 3rem;background:var(--dark);position:relative;}
-.catalog::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--orange),transparent);}
+.service-name{font-family:'Barlow Condensed';font-size:1.2rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:.7rem; color:var(--text-dark);}
+.service-desc{color:var(--text-muted);font-size:.88rem;line-height:1.6; font-weight:500;}
+.service-price{margin-top:1.2rem;font-family:'Barlow Condensed';font-size:1.1rem;font-weight:700;color:var(--accent);}
+
+/* Catalog */
+.catalog{padding:4rem 3rem; background: var(--bg-sec);}
 .catalog-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
 .filters{display:flex;gap:.5rem;margin-bottom:2.5rem;flex-wrap:wrap;}
-.filter-btn{background:transparent;border:1px solid #333;color:var(--gray);padding:.5rem 1.1rem;font-family:'Barlow';font-size:.78rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
-.filter-btn.active,.filter-btn:hover{background:var(--orange);border-color:var(--orange);color:var(--white);}
-.catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1.5rem;}
-.product-card{background:var(--card);overflow:hidden;position:relative;cursor:pointer;transition:transform .3s;border:1px solid #222;}
-.product-card:hover{transform:translateY(-4px);}
-.prod-img{position:relative;aspect-ratio:4/3;overflow:hidden;background:#1e1e1e;}
+.filter-btn{background:var(--bg-card);border:1px solid var(--border-color);color:var(--text-muted);padding:.5rem 1.1rem;font-family:'Barlow';font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s; border-radius:20px;}
+.filter-btn.active,.filter-btn:hover{background:var(--primary);border-color:var(--primary);color:#fff; box-shadow: 0 4px 10px rgba(37,99,235,0.2);}
+.catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:2rem;}
+.product-card{background:var(--bg-card);overflow:hidden;position:relative;cursor:pointer;transition:all .3s;border:1px solid var(--border-color); border-radius:8px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+.product-card:hover{transform:translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.08); border-color: #cbd5e1;}
+.prod-img{position:relative;aspect-ratio:4/3;overflow:hidden;background:#E2E8F0;}
 .prod-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s;}
-.product-card:hover .prod-img img{transform:scale(1.04);}
-.prod-badge{position:absolute;top:.8rem;left:.8rem;background:var(--orange);color:var(--white);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .6rem;}
-.prod-info{padding:1.4rem;}
-.prod-cat{font-size:.68rem;color:var(--orange);font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:.3rem;}
-.prod-name{font-family:'Barlow Condensed';font-size:1.15rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem;}
-.prod-desc{color:var(--gray);font-size:.8rem;line-height:1.5;margin-bottom:1.1rem;}
-.prod-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #2a2a2a;padding-top:.9rem;}
-.prod-price{font-family:'Barlow Condensed';font-size:1.35rem;font-weight:900;color:var(--yellow);}
-.prod-price small{font-size:.75rem;color:var(--gray);font-weight:400;}
-.btn-add{background:var(--orange);color:var(--white);border:none;padding:.45rem .9rem;font-family:'Barlow';font-weight:700;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
-.btn-add:hover{background:#ff7733;}
+.product-card:hover .prod-img img{transform:scale(1.05);}
+.prod-badge{position:absolute;top:1rem;left:1rem;background:var(--primary);color:#fff;font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:.3rem .8rem; border-radius:4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
+.prod-info{padding:1.6rem;}
+.prod-cat{font-size:.68rem;color:var(--primary);font-weight:800;letter-spacing:.2em;text-transform:uppercase;margin-bottom:.4rem;}
+.prod-name{font-family:'Barlow Condensed';font-size:1.2rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem; color:var(--text-dark);}
+.prod-desc{color:var(--text-muted);font-size:.85rem;line-height:1.5;margin-bottom:1.5rem; font-weight:500;}
+.prod-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border-color);padding-top:1rem;}
+.prod-price{font-family:'Barlow Condensed';font-size:1.4rem;font-weight:900;color:var(--accent);}
+.prod-price small{font-size:.75rem;color:var(--text-muted);font-weight:600;}
+.btn-add{background:var(--bg-sec);color:var(--primary);border:none;padding:.5rem 1rem;font-family:'Barlow';font-weight:700;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s; border-radius:4px;}
+.product-card:hover .btn-add{background:var(--primary); color:#fff;}
 .product-card.hidden{display:none;}
+
+/* Workshop & Testimonials */
 .workshop{display:grid;grid-template-columns:1fr 1fr;}
-.workshop-left{background:var(--orange);padding:5rem 3.5rem;display:flex;flex-direction:column;justify-content:center;}
-.workshop-left .section-sub{color:rgba(0,0,0,.5);}
-.workshop-left .section-title{color:var(--black);}
-.workshop-left p{color:rgba(0,0,0,.7);font-size:.95rem;line-height:1.7;margin-top:1rem;}
-.workshop-btn{margin-top:2rem;background:var(--black);color:var(--white);padding:.85rem 2.2rem;font-family:'Barlow';font-weight:700;font-size:.83rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;width:fit-content;display:inline-block;transition:opacity .2s;}
-.workshop-btn:hover{opacity:.8;}
+.workshop-left{background:var(--primary);padding:5rem 3.5rem;display:flex;flex-direction:column;justify-content:center;}
+.workshop-left .section-sub{color:rgba(255,255,255,0.7);}
+.workshop-left .section-title{color:#fff;}
+.workshop-left p{color:rgba(255,255,255,0.9);font-size:1rem;line-height:1.7;margin-top:1rem; font-weight:500;}
+.workshop-btn{margin-top:2.5rem;background:#fff;color:var(--primary);padding:.85rem 2.2rem;font-family:'Barlow';font-weight:800;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;width:fit-content;display:inline-block;transition:all .2s; border:none; cursor:pointer; border-radius:4px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);}
+.workshop-btn:hover{transform:translateY(-3px); box-shadow: 0 15px 25px rgba(0,0,0,0.15);}
 .workshop-right{position:relative;min-height:450px;overflow:hidden;}
-.workshop-right img{width:100%;height:100%;object-fit:cover;filter:grayscale(40%);}
-.workshop-right::after{content:'';position:absolute;inset:0;background:linear-gradient(to right,var(--orange) 0%,transparent 25%);}
-.brands{padding:3.5rem 3rem;border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a;}
-.brands-label{font-size:.68rem;color:#444;letter-spacing:.2em;text-transform:uppercase;text-align:center;margin-bottom:1.8rem;}
-.brands-row{display:flex;align-items:center;justify-content:center;gap:3rem;flex-wrap:wrap;}
-.brand-name{font-family:'Bebas Neue';font-size:1.5rem;letter-spacing:.15em;color:#333;transition:color .3s;}
-.brand-name:hover{color:var(--white);}
-.testimonials{padding:6rem 3rem;background:var(--dark);}
+.workshop-right img{width:100%;height:100%;object-fit:cover;}
+
+.testimonials{padding:4rem 3rem;}
 .testimonials-header{text-align:center;margin-bottom:3rem;}
-.reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.5rem;}
-.review-card{background:var(--card);border:1px solid #222;padding:2rem;position:relative;}
-.review-stars{color:var(--yellow);font-size:.85rem;margin-bottom:.8rem;}
-.review-text{color:#ccc;font-size:.88rem;line-height:1.7;margin-bottom:1.3rem;}
-.review-author{display:flex;align-items:center;gap:.8rem;border-top:1px solid #2a2a2a;padding-top:.9rem;}
-.avatar{width:36px;height:36px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:.95rem;color:var(--white);}
-.author-name{font-weight:700;font-size:.83rem;}
-.author-date{font-size:.72rem;color:var(--gray);}
-.quote-mark{position:absolute;top:1rem;right:1.2rem;font-family:'Bebas Neue';font-size:3.5rem;color:rgba(255,85,0,.1);line-height:1;}
-.contact{padding:6rem 3rem;display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start;}
-.contact-info p{color:var(--gray);line-height:1.8;margin:1.2rem 0 2rem;}
+.reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:2rem;}
+.review-card{background:var(--bg-card);border:1px solid var(--border-color);padding:2.5rem;position:relative; border-radius:8px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
+.review-stars{color:var(--accent);font-size:1rem;margin-bottom:1rem;}
+.review-text{color:var(--text-muted);font-size:.9rem;line-height:1.7;margin-bottom:1.5rem; font-weight:500;}
+.review-author{display:flex;align-items:center;gap:.8rem;border-top:1px solid var(--border-color);padding-top:1.2rem;}
+.avatar{width:40px;height:40px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:1.1rem;color:#fff;}
+.author-name{font-weight:700;font-size:.85rem; color:var(--text-dark);}
+.author-date{font-size:.75rem;color:var(--text-muted); font-weight:500;}
+.quote-mark{position:absolute;top:1rem;right:1.5rem;font-family:'Bebas Neue';font-size:4rem;color:rgba(37,99,235,.05);line-height:1;}
+
+/* Contact */
+.contact{padding:4rem 3rem;display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start; background:var(--bg-sec);}
+.contact-info p{color:var(--text-muted);line-height:1.8;margin:1.2rem 0 2rem; font-weight:500;}
 .info-item{display:flex;gap:1rem;margin-bottom:1.4rem;align-items:flex-start;}
-.info-icon{font-size:1.1rem;margin-top:.1rem;}
-.info-label{font-size:.68rem;color:var(--orange);font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.2rem;}
-.info-value{font-size:.92rem;color:var(--white);}
-.contact-form{display:flex;flex-direction:column;gap:1rem;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
-.form-field{display:flex;flex-direction:column;gap:.35rem;}
-.form-label{font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--gray);}
-.form-input,.form-textarea,.form-select{background:var(--card);border:1px solid #2a2a2a;color:var(--white);padding:.75rem .9rem;font-family:'Barlow';font-size:.88rem;transition:border-color .2s;width:100%;outline:none;}
-.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--orange);}
-.form-textarea{resize:vertical;min-height:110px;}
-.form-select option{background:var(--dark);}
-.form-submit{background:var(--orange);color:var(--white);border:none;padding:1rem;font-family:'Barlow';font-weight:700;font-size:.88rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .2s;}
-.form-submit:hover{background:#ff7733;}
-.whatsapp-btn{display:flex;align-items:center;justify-content:center;gap:.6rem;background:#25D366;color:var(--white);padding:.85rem;font-family:'Barlow';font-weight:700;font-size:.88rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;transition:background .2s;margin-top:.5rem;}
+.info-icon{font-size:1.2rem;margin-top:.1rem;}
+.info-label{font-size:.68rem;color:var(--primary);font-weight:800;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.2rem;}
+.info-value{font-size:.95rem;color:var(--text-dark); font-weight:600;}
+.contact-form{display:flex;flex-direction:column;gap:1.2rem; background:var(--bg-card); padding:2.5rem; border-radius:8px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid var(--border-color);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+.form-field{display:flex;flex-direction:column;gap:.4rem;}
+.form-label{font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);}
+.form-input,.form-textarea,.form-select{background:var(--bg-main);border:2px solid var(--border-color);color:var(--text-dark);padding:.85rem 1rem;font-family:'Barlow';font-size:.9rem;transition:all .2s;width:100%;outline:none; border-radius:4px; font-weight:500;}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--primary); background:var(--bg-card); box-shadow: 0 0 0 3px rgba(37,99,235,0.1);}
+.form-textarea{resize:vertical;min-height:120px;}
+.form-submit{background:var(--primary);color:#fff;border:none;padding:1.1rem;font-family:'Barlow';font-weight:800;font-size:.9rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s; border-radius:4px; margin-top:.5rem;}
+.form-submit:hover{background:#1D4ED8; box-shadow: 0 8px 20px rgba(37,99,235,0.2);}
+.whatsapp-btn{display:flex;align-items:center;justify-content:center;gap:.6rem;background:#25D366;color:#fff;padding:.9rem;font-family:'Barlow';font-weight:800;font-size:.9rem;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;transition:background .2s; border-radius:4px;}
 .whatsapp-btn:hover{background:#1ebe5d;}
-footer{background:var(--black);border-top:1px solid #1a1a1a;padding:3.5rem 3rem 2rem;}
-.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:2.5rem;}
-.footer-brand p{color:var(--gray);font-size:.83rem;line-height:1.7;margin-top:.8rem;}
-.footer-col h4{font-family:'Barlow Condensed';font-size:.85rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--white);margin-bottom:1rem;}
-.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.55rem;}
-.footer-col ul a{color:var(--gray);text-decoration:none;font-size:.83rem;transition:color .2s;}
-.footer-col ul a:hover{color:var(--orange);}
-.footer-bottom{border-top:1px solid #1a1a1a;padding-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;}
-.footer-bottom p{color:#444;font-size:.78rem;}
-.orange{color:var(--orange);}
-.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.88);backdrop-filter:blur(5px);align-items:center;justify-content:center;}
+
+footer{background:var(--text-dark);padding:4rem 3rem 2rem;}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem;}
+.footer-brand .logo{color:#fff;}
+.footer-brand p{color:#94a3b8;font-size:.85rem;line-height:1.7;margin-top:1rem; font-weight:500;}
+.footer-col h4{font-family:'Barlow Condensed';font-size:.9rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#fff;margin-bottom:1.2rem;}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:.7rem;}
+.footer-col ul button, .footer-col ul a{background:none; border:none; text-align:left; color:#94a3b8;text-decoration:none;font-size:.85rem;transition:color .2s; cursor:pointer; font-weight:500;}
+.footer-col ul button:hover, .footer-col ul a:hover{color:#60a5fa;}
+.footer-bottom{border-top:1px solid #334155;padding-top:2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;}
+.footer-bottom p{color:#64748b;font-size:.8rem; font-weight:500;}
+
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(15,23,42,.8);backdrop-filter:blur(5px);align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--card);border:1px solid #333;max-width:500px;width:90%;padding:2.5rem;position:relative;max-height:90vh;overflow-y:auto;}
-.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--gray);font-size:1.3rem;cursor:pointer;}
-.modal-close:hover{color:var(--orange);}
-.modal-img{width:100%;aspect-ratio:16/9;object-fit:cover;margin-bottom:1.3rem;}
-.modal-title{font-family:'Barlow Condensed';font-size:1.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;}
-.modal-cat{color:var(--orange);font-size:.72rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:.9rem;}
-.modal-desc{color:var(--gray);font-size:.88rem;line-height:1.7;margin-bottom:1.3rem;}
-.modal-price{font-family:'Barlow Condensed';font-size:2rem;font-weight:900;color:var(--yellow);}
-.modal-actions{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-top:1rem;}
-.toast{position:fixed;bottom:2rem;right:2rem;background:var(--card);border-left:4px solid var(--orange);color:var(--white);padding:.9rem 1.3rem;font-size:.85rem;z-index:300;transform:translateY(100px);opacity:0;transition:all .4s;max-width:300px;}
+.modal{background:var(--bg-card);border:1px solid var(--border-color);max-width:550px;width:90%;padding:2.5rem;position:relative;max-height:90vh;overflow-y:auto; border-radius:12px; box-shadow: 0 25px 50px rgba(0,0,0,0.15);}
+.modal-close{position:absolute;top:1rem;right:1rem;background:var(--bg-main);border:1px solid var(--border-color);color:var(--text-muted);font-size:1.2rem;cursor:pointer; width:35px; height:35px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:all .2s;}
+.modal-close:hover{color:var(--primary); border-color:var(--primary);}
+.modal-img{width:100%;aspect-ratio:16/9;object-fit:cover;margin-bottom:1.5rem; border-radius:8px;}
+.modal-title{font-family:'Barlow Condensed';font-size:1.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem; color:var(--text-dark);}
+.modal-cat{color:var(--primary);font-size:.75rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem;}
+.modal-desc{color:var(--text-muted);font-size:.9rem;line-height:1.7;margin-bottom:1.5rem; font-weight:500;}
+.modal-price{font-family:'Barlow Condensed';font-size:2.2rem;font-weight:900;color:var(--accent);}
+.modal-actions{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-top:1rem; padding-top:1.5rem; border-top:1px solid var(--border-color);}
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--text-dark);border-left:4px solid var(--primary);color:#fff;padding:1rem 1.5rem;font-size:.9rem; font-weight:600; z-index:300;transform:translateY(100px);opacity:0;transition:all .4s;max-width:300px; border-radius:4px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);}
 .toast.show{transform:translateY(0);opacity:1;}
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
 @media(max-width:1024px){.footer-top{grid-template-columns:1fr 1fr;}}
 @media(max-width:768px){
   nav{padding:1rem 1.5rem;}.nav-links{display:none;}.hamburger{display:flex;}
   .hero{grid-template-columns:1fr;}.hero-right{min-height:320px;}.hero-left{padding:3rem 1.5rem;}
-  .services,.catalog,.testimonials{padding:4rem 1.5rem;}
+  .services,.catalog,.testimonials, .customizer-wrap{padding:3rem 1.5rem;}
+  .custom-grid{grid-template-columns:1fr;}
   .workshop{grid-template-columns:1fr;}.workshop-left{padding:3.5rem 2rem;}.workshop-right{min-height:300px;}
-  .contact{grid-template-columns:1fr;gap:2rem;padding:4rem 1.5rem;}.form-row{grid-template-columns:1fr;}
-  .footer-top{grid-template-columns:1fr;}footer{padding:3rem 1.5rem 2rem;}.brands{padding:2.5rem 1.5rem;}
+  .contact{grid-template-columns:1fr;gap:2rem;padding:3rem 1.5rem;}.form-row{grid-template-columns:1fr;}
+  .footer-top{grid-template-columns:1fr;}footer{padding:3rem 1.5rem 2rem;}
 }
 </style>
 </head>
 <body>
 <div class="cursor" id="cursor"></div>
+
+<!-- NAVIGATION -->
 <nav>
-  <a href="#inicio" class="logo">{{ info.nombre[:4] }}<span>{{ info.nombre[4:] }}</span></a>
+  <button onclick="changeRoute('inicio')" class="logo">{{ info.nombre[:4] }}<span>{{ info.nombre[4:] }}</span></button>
   <ul class="nav-links">
-    <li><a href="#servicios">Servicios</a></li>
-    <li><a href="#catalogo">Catálogo</a></li>
-    <li><a href="#taller">Taller</a></li>
-    <li><a href="#contacto">Contacto</a></li>
+    <li><button onclick="changeRoute('servicios')" data-target="servicios">Servicios</button></li>
+    <li><button onclick="changeRoute('catalogo')" data-target="catalogo">Catálogo</button></li>
+    <li><button onclick="changeRoute('modificaciones')" data-target="modificaciones">Modificaciones</button></li>
+    <li><button onclick="changeRoute('taller')" data-target="taller">Taller</button></li>
+    <li><button onclick="changeRoute('contacto')" data-target="contacto">Contacto</button></li>
     <li><a href="https://wa.me/{{ info.whatsapp }}" target="_blank" class="nav-cta">WhatsApp</a></li>
   </ul>
   <button class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
 </nav>
+
+<!-- MOBILE MENU -->
 <div class="mob-menu" id="mobMenu">
-  <a href="#servicios" onclick="toggleMenu()">Servicios</a>
-  <a href="#catalogo" onclick="toggleMenu()">Catálogo</a>
-  <a href="#taller" onclick="toggleMenu()">Taller</a>
-  <a href="#contacto" onclick="toggleMenu()">Contacto</a>
+  <button onclick="changeRoute('servicios')">Servicios</button>
+  <button onclick="changeRoute('catalogo')">Catálogo</button>
+  <button onclick="changeRoute('modificaciones')">Modificaciones</button>
+  <button onclick="changeRoute('taller')">Taller</button>
+  <button onclick="changeRoute('contacto')">Contacto</button>
   <a href="https://wa.me/{{ info.whatsapp }}" target="_blank">WhatsApp ↗</a>
-  <a href="/admin">⚙️ Admin</a>
+  <a href="/admin" style="color:var(--primary);">⚙️ Admin</a>
 </div>
 
-<section class="hero" id="inicio">
-  <div class="hero-left">
-    <div class="hero-tag">🔧 Taller profesional & Tienda</div>
-    <h1 class="hero-title"><span>Tu bici,</span><span class="accent">tu pasión,</span><span class="outline">nuestro oficio.</span></h1>
-    <p class="hero-desc">{{ info.descripcion }}</p>
-    <div class="hero-btns"><a href="#catalogo" class="btn-primary">Ver catálogo</a><a href="#servicios" class="btn-secondary">Nuestros servicios</a></div>
-    <div class="hero-stats">{% for s in stats %}<div><div class="stat-num">{{ s.numero }}</div><div class="stat-label">{{ s.label }}</div></div>{% endfor %}</div>
-  </div>
-  <div class="hero-right">
-    <img class="hero-img" src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80" alt="Taller">
-    <div class="hero-overlay"></div>
-    <div class="hero-badge"><span>ABRE<br>HOY</span></div>
-  </div>
-</section>
+<!-- MAIN CONTAINER -->
+<main id="main-content">
 
-<div class="marquee-wrap"><div class="marquee-inner">{% for i in range(2) %}<span>REPARACIÓN PROFESIONAL</span><span class="dot">◆</span><span>VENTA DE BICIS</span><span class="dot">◆</span><span>ACCESORIOS Y REPUESTOS</span><span class="dot">◆</span><span>AJUSTE Y TUNING</span><span class="dot">◆</span><span>SERVICIO TÉCNICO</span><span class="dot">◆</span><span>GARANTÍA EN TODOS LOS TRABAJOS</span><span class="dot">◆</span>{% endfor %}</div></div>
-
-<section class="services" id="servicios">
-  <div class="services-header"><div><div class="section-sub"><span class="line-h"></span>Lo que hacemos</div><h2 class="section-title">Servicios del taller</h2></div><a href="https://wa.me/{{ info.whatsapp }}" target="_blank" class="btn-secondary">Agendar cita →</a></div>
-  <div class="services-grid">{% for s in servicios %}<div class="service-card"><span class="service-icon">{{ s.icono }}</span><div class="service-name">{{ s.nombre }}</div><div class="service-desc">{{ s.descripcion }}</div><div class="service-price">{{ s.precio }}</div></div>{% endfor %}</div>
-</section>
-
-<section class="catalog" id="catalogo">
-  <div class="catalog-header"><div><div class="section-sub"><span class="line-h"></span>Lo que vendemos</div><h2 class="section-title">Catálogo</h2></div></div>
-  <div class="filters">
-    <button class="filter-btn active" data-filter="all">Todo</button>
-    <button class="filter-btn" data-filter="bici">Bicicletas</button>
-    <button class="filter-btn" data-filter="accesorio">Accesorios</button>
-    <button class="filter-btn" data-filter="repuesto">Repuestos</button>
-  </div>
-  <div class="catalog-grid">
-    {% for b in bicicletas %}<div class="product-card" data-cat="bici" data-img="{{ b.imagen }}" data-name="{{ b.modelo }}" data-cat-label="Bicicleta" data-desc="{{ b.descripcion }}" data-price="${{ '{:,.0f}'.format(b.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ b.imagen }}" alt="{{ b.modelo }}" loading="lazy">{% if b.badge %}<span class="prod-badge">{{ b.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Bicicleta</div><div class="prod-name">{{ b.modelo }}</div><div class="prod-desc">{{ b.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(b.precio) }}<br><small>{{ b.talla }}</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
-    {% for a in accesorios %}<div class="product-card" data-cat="accesorio" data-img="{{ a.imagen }}" data-name="{{ a.nombre }}" data-cat-label="Accesorio" data-desc="{{ a.descripcion }}" data-price="${{ '{:,.0f}'.format(a.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ a.imagen }}" alt="{{ a.nombre }}" loading="lazy">{% if a.badge %}<span class="prod-badge">{{ a.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Accesorio</div><div class="prod-name">{{ a.nombre }}</div><div class="prod-desc">{{ a.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(a.precio) }}<br><small>MXN</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
-    {% for r in repuestos %}<div class="product-card" data-cat="repuesto" data-img="{{ r.imagen }}" data-name="{{ r.nombre }}" data-cat-label="Repuesto" data-desc="{{ r.descripcion }}" data-price="${{ '{:,.0f}'.format(r.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ r.imagen }}" alt="{{ r.nombre }}" loading="lazy">{% if r.badge %}<span class="prod-badge">{{ r.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Repuesto</div><div class="prod-name">{{ r.nombre }}</div><div class="prod-desc">{{ r.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(r.precio) }}<br><small>MXN</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
-  </div>
-</section>
-
-<section class="workshop" id="taller">
-  <div class="workshop-left"><div class="section-sub">El taller</div><h2 class="section-title">Mecánicos<br>que aman<br>las bicis.</h2><p>Nuestro equipo tiene más de {{ info.anios }} años de experiencia reparando bicicletas.</p><p style="margin-top:.8rem">Garantía escrita y revisión de 30 días sin costo.</p><a href="https://wa.me/{{ info.whatsapp }}" target="_blank" class="workshop-btn">Reservar turno 🔧</a></div>
-  <div class="workshop-right"><img src="https://images.unsplash.com/photo-1619818586372-5e77cfb7aeeb?w=800&q=80" alt="Taller"></div>
-</section>
-
-<div class="brands"><div class="brands-label">Marcas que trabajamos</div><div class="brands-row">{% for m in marcas %}<span class="brand-name">{{ m }}</span>{% endfor %}</div></div>
-
-<section class="testimonials">
-  <div class="testimonials-header"><div class="section-sub"><span class="line-h"></span>Lo que dicen</div><h2 class="section-title">Clientes felices</h2></div>
-  <div class="reviews-grid">{% for r in resenas %}<div class="review-card"><div class="quote-mark">"</div><div class="review-stars">{% for i in range(r.estrellas) %}★{% endfor %}</div><p class="review-text">{{ r.texto }}</p><div class="review-author"><div class="avatar">{{ r.inicial }}</div><div><div class="author-name">{{ r.nombre }}</div><div class="author-date">{{ r.fecha }}</div></div></div></div>{% endfor %}</div>
-</section>
-
-<section class="contact" id="contacto">
-  <div class="contact-info"><div class="section-sub"><span class="line-h"></span>Estamos aquí</div><h2 class="section-title">Contáctanos</h2><p>¿Quieres agendar una cita o saber más? Escríbenos o visítanos.</p>
-    
-    <div style="margin-bottom: 2rem;">
-        {% for ubi in ubicaciones %}
-        <div class="info-item" style="margin-bottom: 1.5rem; align-items: flex-start; padding-bottom: 1.5rem; border-bottom: 1px dashed #2a2a2a;">
-            <div class="info-icon" style="margin-right: 0.5rem;">📍</div>
-            <div style="width: 100%;">
-                <div class="info-label">{{ ubi.nombre }}</div>
-                <div class="info-value" style="margin-bottom: 0.8rem;">{{ ubi.direccion }}</div>
-                {% if ubi.maps_embed %}
-                <div style="border:1px solid #2a2a2a;overflow:hidden;height:180px;width:100%;border-radius:6px;">
-                    <iframe width="100%" height="100%" frameborder="0" src="{{ ubi.maps_embed }}" style="filter:grayscale(80%) invert(90%) contrast(0.9);"></iframe>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        {% endfor %}
+  <!-- ================= INICIO ================= -->
+  <section class="page-section active" id="inicio">
+    <div class="hero">
+      <div class="hero-left">
+        <div class="hero-tag">🔧 Taller profesional & Tienda</div>
+        <h1 class="hero-title"><span>Tu bici,</span><span class="accent">tu pasión,</span><span class="outline">nuestro oficio.</span></h1>
+        <p class="hero-desc">{{ info.descripcion }}</p>
+        <div class="hero-btns"><button onclick="changeRoute('catalogo')" class="btn-primary">Ver catálogo</button><button onclick="changeRoute('servicios')" class="btn-secondary">Nuestros servicios</button></div>
+        <div class="hero-stats">{% for s in stats %}<div><div class="stat-num">{{ s.numero }}</div><div class="stat-label">{{ s.label }}</div></div>{% endfor %}</div>
+      </div>
+      <div class="hero-right">
+        <img class="hero-img" src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=80" alt="Taller">
+        <div class="hero-overlay"></div>
+      </div>
     </div>
+  </section>
 
-    <div class="info-item"><div class="info-icon">📞</div><div><div class="info-label">Teléfono</div><div class="info-value">{{ info.telefono }}</div></div></div>
-    <div class="info-item"><div class="info-icon">📧</div><div><div class="info-label">Email</div><div class="info-value">{{ info.email }}</div></div></div>
-    <div class="info-item"><div class="info-icon">🕐</div><div><div class="info-label">Horarios</div>{% for h in info.horarios %}<div class="info-value">{{ h.dia }}: {{ h.hora }}</div>{% endfor %}</div></div>
-    
-    <div style="margin-top:2rem; background:var(--card); padding:1.5rem; border:1px solid #2a2a2a; border-left:3px solid var(--orange);">
-      <div style="font-size:.68rem; color:var(--orange); font-weight:700; letter-spacing:.15em; text-transform:uppercase; margin-bottom:1rem;">Datos para Transferencia</div>
-      <div style="display:flex; gap:1.5rem; align-items:center; flex-wrap:wrap;">
-        {% if info.qr_pago %}
-        <img src="{{ info.qr_pago }}" alt="QR de Pago" style="width:90px; height:90px; object-fit:contain; background:white; padding:5px; border-radius:6px;">
-        {% endif %}
-        <div>
-          <div style="font-size:.75rem; color:var(--gray); margin-bottom:.1rem;"><strong>Banco:</strong> {{ info.banco }}</div>
-          <div style="font-size:.75rem; color:var(--gray); margin-bottom:.4rem;"><strong>Titular:</strong> {{ info.titular }}</div>
-          <div style="font-size:.68rem; color:var(--orange); text-transform:uppercase; letter-spacing:.1em; margin-bottom:.1rem;">CLABE Interbancaria</div>
-          <div style="font-size:1.1rem; font-family:monospace; color:var(--white); font-weight:bold; letter-spacing:1px;">{{ info.clabe }}</div>
+  <!-- ================= SERVICIOS ================= -->
+  <section class="page-section" id="servicios">
+    <div class="services">
+      <div class="services-header"><div><div class="section-sub"><span class="line-h"></span>Lo que hacemos</div><h2 class="section-title">Servicios del taller</h2></div><button onclick="changeRoute('contacto')" class="btn-secondary">Agendar cita →</button></div>
+      <div class="services-grid">{% for s in servicios %}<div class="service-card"><span class="service-icon">{{ s.icono }}</span><div class="service-name">{{ s.nombre }}</div><div class="service-desc">{{ s.descripcion }}</div><div class="service-price">{{ s.precio }}</div></div>{% endfor %}</div>
+    </div>
+  </section>
+
+  <!-- ================= CATÁLOGO ================= -->
+  <section class="page-section" id="catalogo">
+    <div class="catalog">
+      <div class="catalog-header"><div><div class="section-sub"><span class="line-h"></span>Lo que vendemos</div><h2 class="section-title">Catálogo</h2></div></div>
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">Todo</button>
+        <button class="filter-btn" data-filter="bici">Bicicletas</button>
+        <button class="filter-btn" data-filter="accesorio">Accesorios</button>
+        <button class="filter-btn" data-filter="repuesto">Repuestos</button>
+      </div>
+      <div class="catalog-grid">
+        {% for b in bicicletas %}<div class="product-card" data-cat="bici" data-img="{{ b.imagen }}" data-name="{{ b.modelo }}" data-cat-label="Bicicleta" data-desc="{{ b.descripcion }}" data-price="${{ '{:,.0f}'.format(b.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ b.imagen }}" alt="{{ b.modelo }}" loading="lazy">{% if b.badge %}<span class="prod-badge">{{ b.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Bicicleta</div><div class="prod-name">{{ b.modelo }}</div><div class="prod-desc">{{ b.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(b.precio) }}<br><small>{{ b.talla }}</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
+        {% for a in accesorios %}<div class="product-card" data-cat="accesorio" data-img="{{ a.imagen }}" data-name="{{ a.nombre }}" data-cat-label="Accesorio" data-desc="{{ a.descripcion }}" data-price="${{ '{:,.0f}'.format(a.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ a.imagen }}" alt="{{ a.nombre }}" loading="lazy">{% if a.badge %}<span class="prod-badge">{{ a.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Accesorio</div><div class="prod-name">{{ a.nombre }}</div><div class="prod-desc">{{ a.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(a.precio) }}<br><small>MXN</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
+        {% for r in repuestos %}<div class="product-card" data-cat="repuesto" data-img="{{ r.imagen }}" data-name="{{ r.nombre }}" data-cat-label="Repuesto" data-desc="{{ r.descripcion }}" data-price="${{ '{:,.0f}'.format(r.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ r.imagen }}" alt="{{ r.nombre }}" loading="lazy">{% if r.badge %}<span class="prod-badge">{{ r.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Repuesto</div><div class="prod-name">{{ r.nombre }}</div><div class="prod-desc">{{ r.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(r.precio) }}<br><small>MXN</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MODIFICACIONES 3D ================= -->
+  <section class="page-section" id="modificaciones">
+    <div class="customizer-wrap">
+      <div><div class="section-sub"><span class="line-h"></span>Tu estilo, tus reglas</div><h2 class="section-title">Estudio de Modificaciones</h2></div>
+      
+      <div class="custom-grid">
+        <!-- Visualizador Izquierda -->
+        <div class="podium-box">
+            <div class="podium-floor"></div>
+            <svg class="bike-svg" viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg">
+                <!-- Ruedas Base (Fijas - Grises Claras para combinar con tema claro) -->
+                <circle cx="120" cy="200" r="75" stroke="#94a3b8" stroke-width="12" fill="transparent" />
+                <circle cx="120" cy="200" r="5" fill="#64748b" />
+                <circle cx="380" cy="200" r="75" stroke="#94a3b8" stroke-width="12" fill="transparent" />
+                <circle cx="380" cy="200" r="5" fill="#64748b" />
+                <line x1="120" y1="200" x2="120" y2="125" stroke="#cbd5e1" stroke-width="2"/>
+                <line x1="120" y1="200" x2="195" y2="200" stroke="#cbd5e1" stroke-width="2"/>
+                <line x1="380" y1="200" x2="380" y2="125" stroke="#cbd5e1" stroke-width="2"/>
+                <line x1="380" y1="200" x2="305" y2="200" stroke="#cbd5e1" stroke-width="2"/>
+                
+                <!-- Componentes Negros/Oscuros (Asiento, Manubrio, Tijera Frontal) -->
+                <path d="M 190 85 L 240 85" stroke="#334155" stroke-width="14" stroke-linecap="round"/>
+                <path d="M 215 85 L 215 110" stroke="#475569" stroke-width="10"/>
+                <path id="svg-fork" d="M 330 90 L 380 200" stroke="#475569" stroke-width="10" stroke-linecap="round"/>
+                <path id="svg-handlebar" d="M 320 65 L 350 65" stroke="#334155" stroke-width="10" stroke-linecap="round"/>
+                <path d="M 330 90 L 335 65" stroke="#475569" stroke-width="8"/>
+                
+                <!-- CUADRO DINÁMICO (Cambia de forma y color) -->
+                <path id="svg-frame" class="bike-path" d="M 120 200 L 250 200 L 330 90 L 215 110 Z" fill="none" stroke="var(--bike-color)" stroke-width="14" stroke-linejoin="round" />
+                <path id="svg-frame-seat" class="bike-path" d="M 215 110 L 250 200" fill="none" stroke="var(--bike-color)" stroke-width="16" stroke-linecap="round"/>
+                <path id="svg-frame-chain" class="bike-path" d="M 120 200 L 250 200" fill="none" stroke="var(--bike-color)" stroke-width="10" stroke-linecap="round"/>
+                
+                <!-- Plato y Pedales -->
+                <circle cx="250" cy="200" r="18" fill="#475569" />
+                <line x1="250" y1="200" x2="250" y2="230" stroke="#475569" stroke-width="6" stroke-linecap="round"/>
+                <line x1="240" y1="230" x2="260" y2="230" stroke="#334155" stroke-width="8" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <!-- Panel de Herramientas Derecha -->
+        <div class="tools-panel">
+            <div class="tool-title">1. Selecciona el Modelo</div>
+            <div class="model-selector">
+                <button class="model-btn active" onclick="setBikeModel('mtb', this)">Mountain Bike (MTB)</button>
+                <button class="model-btn" onclick="setBikeModel('ruta', this)">Bicicleta de Ruta</button>
+                <button class="model-btn" onclick="setBikeModel('urbana', this)">Urbana / Paseo</button>
+            </div>
+
+            <div class="tool-title">2. Color del Cuadro</div>
+            <div class="color-palette">
+                <!-- Colores vibrantes adaptados a fondo claro -->
+                <div class="color-swatch active" style="background:#2563EB;" onclick="setBikeColor('#2563EB', this)"></div> <!-- Azul -->
+                <div class="color-swatch" style="background:#9333EA;" onclick="setBikeColor('#9333EA', this)"></div> <!-- Morado -->
+                <div class="color-swatch" style="background:#E63946;" onclick="setBikeColor('#E63946', this)"></div> <!-- Rojo -->
+                <div class="color-swatch" style="background:#10B981;" onclick="setBikeColor('#10B981', this)"></div> <!-- Verde -->
+                <div class="color-swatch" style="background:#F59E0B;" onclick="setBikeColor('#F59E0B', this)"></div> <!-- Naranja -->
+                <div class="color-swatch" style="background:#EC4899;" onclick="setBikeColor('#EC4899', this)"></div> <!-- Rosa -->
+                <div class="color-swatch" style="background:#1E293B;" onclick="setBikeColor('#1E293B', this)"></div> <!-- Negro/Oscuro -->
+                <div class="color-swatch" style="background:#94A3B8;" onclick="setBikeColor('#94A3B8', this)"></div> <!-- Plata -->
+            </div>
+            
+            <div style="margin-top: 2.5rem;">
+                <button onclick="changeRoute('contacto')" class="btn-primary" style="width:100%; text-align:center;">Cotizar Proyecto</button>
+            </div>
         </div>
       </div>
     </div>
-  </div>
-  <div><form class="contact-form" id="contactForm">
-    <div class="form-row"><div class="form-field"><label class="form-label">Nombre</label><input type="text" class="form-input" id="fname" placeholder="Tu nombre" required></div><div class="form-field"><label class="form-label">Teléfono</label><input type="tel" class="form-input" id="fphone" placeholder="+52 55 ..."></div></div>
-    <div class="form-field"><label class="form-label">Email</label><input type="email" class="form-input" id="femail" placeholder="tu@email.com" required></div>
-    <div class="form-field"><label class="form-label">¿En qué podemos ayudarte?</label><select class="form-select" id="fservicio"><option value="">Selecciona una opción</option>{% for s in servicios %}<option>{{ s.nombre }}</option>{% endfor %}<option>Compra de bicicleta</option><option>Otro</option></select></div>
-    <div class="form-field"><label class="form-label">Mensaje</label><textarea class="form-textarea" id="fmsg" placeholder="Cuéntanos más..."></textarea></div>
-    <button type="submit" class="form-submit">Enviar mensaje →</button>
-    <a href="https://wa.me/{{ info.whatsapp }}" target="_blank" class="whatsapp-btn">💬 Escribir por WhatsApp</a>
-  </form></div>
-</section>
+  </section>
+
+  <!-- ================= TALLER ================= -->
+  <section class="page-section" id="taller">
+    <div class="workshop">
+      <div class="workshop-left"><div class="section-sub">El taller</div><h2 class="section-title">Mecánicos<br>que aman<br>las bicis.</h2><p>Nuestro equipo tiene más de {{ info.anios }} años de experiencia reparando bicicletas.</p><p style="margin-top:.8rem">Garantía escrita y revisión de 30 días sin costo.</p><button onclick="changeRoute('contacto')" class="workshop-btn">Reservar turno 🔧</button></div>
+      <div class="workshop-right"><img src="https://images.unsplash.com/photo-1619818586372-5e77cfb7aeeb?w=800&q=80" alt="Taller"></div>
+    </div>
+    
+    <div class="testimonials">
+      <div class="testimonials-header"><div class="section-sub"><span class="line-h"></span>Lo que dicen</div><h2 class="section-title">Clientes felices</h2></div>
+      <div class="reviews-grid">{% for r in resenas %}<div class="review-card"><div class="quote-mark">"</div><div class="review-stars">{% for i in range(r.estrellas) %}★{% endfor %}</div><p class="review-text">{{ r.texto }}</p><div class="review-author"><div class="avatar">{{ r.inicial }}</div><div><div class="author-name">{{ r.nombre }}</div><div class="author-date">{{ r.fecha }}</div></div></div></div>{% endfor %}</div>
+    </div>
+  </section>
+
+  <!-- ================= CONTACTO ================= -->
+  <section class="page-section" id="contacto">
+    <div class="contact">
+      <div class="contact-info"><div class="section-sub"><span class="line-h"></span>Estamos aquí</div><h2 class="section-title">Contáctanos</h2><p>¿Quieres agendar una cita o saber más? Escríbenos o visítanos.</p>
+        
+        <div style="margin-bottom: 2rem;">
+            {% for ubi in ubicaciones %}
+            <div class="info-item" style="margin-bottom: 1.5rem; align-items: flex-start; padding-bottom: 1.5rem; border-bottom: 1px dashed var(--border-color);">
+                <div class="info-icon" style="margin-right: 0.5rem; color: var(--primary);">📍</div>
+                <div style="width: 100%;">
+                    <div class="info-label">{{ ubi.nombre }}</div>
+                    <div class="info-value" style="margin-bottom: 0.8rem;">{{ ubi.direccion }}</div>
+                    {% if ubi.maps_embed %}
+                    <div style="border:1px solid var(--border-color);overflow:hidden;height:180px;width:100%;border-radius:6px;">
+                        <iframe width="100%" height="100%" frameborder="0" src="{{ ubi.maps_embed }}" style="filter:grayscale(30%) contrast(1.1);"></iframe>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="info-item"><div class="info-icon" style="color:var(--primary);">📞</div><div><div class="info-label">Teléfono</div><div class="info-value">{{ info.telefono }}</div></div></div>
+        <div class="info-item"><div class="info-icon" style="color:var(--primary);">📧</div><div><div class="info-label">Email</div><div class="info-value">{{ info.email }}</div></div></div>
+        <div class="info-item"><div class="info-icon" style="color:var(--primary);">🕐</div><div><div class="info-label">Horarios</div>{% for h in info.horarios %}<div class="info-value">{{ h.dia }}: {{ h.hora }}</div>{% endfor %}</div></div>
+        
+        <div style="margin-top:2rem; background:var(--bg-main); padding:1.5rem; border:1px solid var(--border-color); border-left:4px solid var(--accent); border-radius: 8px;">
+          <div style="font-size:.68rem; color:var(--accent); font-weight:800; letter-spacing:.15em; text-transform:uppercase; margin-bottom:1rem;">Datos para Transferencia</div>
+          <div style="display:flex; gap:1.5rem; align-items:center; flex-wrap:wrap;">
+            {% if info.qr_pago %}
+            <img src="{{ info.qr_pago }}" alt="QR de Pago" style="width:90px; height:90px; object-fit:contain; background:white; padding:5px; border-radius:6px; border: 1px solid #cbd5e1;">
+            {% endif %}
+            <div>
+              <div style="font-size:.75rem; color:var(--text-muted); margin-bottom:.1rem;"><strong>Banco:</strong> <span style="color:var(--text-dark);">{{ info.banco }}</span></div>
+              <div style="font-size:.75rem; color:var(--text-muted); margin-bottom:.4rem;"><strong>Titular:</strong> <span style="color:var(--text-dark);">{{ info.titular }}</span></div>
+              <div style="font-size:.68rem; color:var(--primary); text-transform:uppercase; font-weight:700; letter-spacing:.1em; margin-bottom:.1rem;">CLABE Interbancaria</div>
+              <div style="font-size:1.1rem; font-family:monospace; color:var(--text-dark); font-weight:800; letter-spacing:1px;">{{ info.clabe }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div><form class="contact-form" id="contactForm">
+        <div class="form-row"><div class="form-field"><label class="form-label">Nombre</label><input type="text" class="form-input" id="fname" placeholder="Tu nombre" required></div><div class="form-field"><label class="form-label">Teléfono</label><input type="tel" class="form-input" id="fphone" placeholder="+52 55 ..."></div></div>
+        <div class="form-field"><label class="form-label">Email</label><input type="email" class="form-input" id="femail" placeholder="tu@email.com" required></div>
+        <div class="form-field"><label class="form-label">¿En qué podemos ayudarte?</label><select class="form-select" id="fservicio"><option value="">Selecciona una opción</option>{% for s in servicios %}<option>{{ s.nombre }}</option>{% endfor %}<option>Compra de bicicleta</option><option>Modificación / Pintura</option><option>Otro</option></select></div>
+        <div class="form-field"><label class="form-label">Mensaje</label><textarea class="form-textarea" id="fmsg" placeholder="Cuéntanos más..."></textarea></div>
+        <button type="submit" class="form-submit">Enviar mensaje →</button>
+        <a href="https://wa.me/{{ info.whatsapp }}" target="_blank" class="whatsapp-btn">💬 Escribir por WhatsApp</a>
+      </form></div>
+    </div>
+  </section>
+
+</main>
 
 <footer><div class="footer-top">
-  <div class="footer-brand"><a href="#inicio" class="logo">{{ info.nombre[:4] }}<span>{{ info.nombre[4:] }}</span></a><p>{{ info.descripcion }}</p></div>
-  <div class="footer-col"><h4>Servicios</h4><ul>{% for s in servicios %}<li><a href="#servicios">{{ s.nombre }}</a></li>{% endfor %}</ul></div>
-  <div class="footer-col"><h4>Tienda</h4><ul><li><a href="#catalogo">Bicicletas</a></li><li><a href="#catalogo">Accesorios</a></li><li><a href="#catalogo">Repuestos</a></li></ul></div>
+  <div class="footer-brand"><button onclick="changeRoute('inicio')" class="logo" style="background:none;border:none;">{{ info.nombre[:4] }}<span>{{ info.nombre[4:] }}</span></button><p>{{ info.descripcion }}</p></div>
+  <div class="footer-col"><h4>Servicios</h4><ul>{% for s in servicios %}<li><button onclick="changeRoute('servicios')">{{ s.nombre }}</button></li>{% endfor %}</ul></div>
+  <div class="footer-col"><h4>Tienda</h4><ul><li><button onclick="changeRoute('catalogo')">Bicicletas</button></li><li><button onclick="changeRoute('catalogo')">Accesorios</button></li><li><button onclick="changeRoute('catalogo')">Repuestos</button></li></ul></div>
   <div class="footer-col"><h4>Contacto</h4><ul>{% if info.instagram %}<li><a href="{{ info.instagram }}" target="_blank">Instagram</a></li>{% endif %}{% if info.facebook %}<li><a href="{{ info.facebook }}" target="_blank">Facebook</a></li>{% endif %}<li><a href="https://wa.me/{{ info.whatsapp }}" target="_blank">WhatsApp</a></li><li><a href="/admin">⚙️ Admin</a></li></ul></div>
-</div><div class="footer-bottom"><p>© 2025 {{ info.nombre }}. Todos los derechos reservados.</p><p>Hecho con <span class="orange">♥</span> para los amantes de la bicicleta</p></div></footer>
+</div><div class="footer-bottom"><p>© 2026 {{ info.nombre }}. Todos los derechos reservados.</p><p>Hecho con <span style="color:var(--primary);">♥</span> para los amantes de la bicicleta</p></div></footer>
 
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)"><div class="modal" onclick="event.stopPropagation()"><button class="modal-close" onclick="closeModal()">✕</button><img src="" alt="" class="modal-img" id="modalImg"><div class="modal-cat" id="modalCat"></div><div class="modal-title" id="modalTitle"></div><div class="modal-desc" id="modalDesc"></div><div class="modal-actions"><div class="modal-price" id="modalPrice"></div><a href="#contacto" class="btn-primary" onclick="closeModal()" style="text-decoration:none">Consultar →</a></div></div></div>
+<!-- Modals & Toasts -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)"><div class="modal" onclick="event.stopPropagation()"><button class="modal-close" onclick="closeModal()">✕</button><img src="" alt="" class="modal-img" id="modalImg"><div class="modal-cat" id="modalCat"></div><div class="modal-title" id="modalTitle"></div><div class="modal-desc" id="modalDesc"></div><div class="modal-actions"><div class="modal-price" id="modalPrice"></div><button class="btn-primary" onclick="changeRoute('contacto'); closeModal();">Consultar →</button></div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
+// --- Custom Cursor ---
 const cursor=document.getElementById('cursor');
 document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px';});
-document.querySelectorAll('a,button,.product-card,.service-card,.filter-btn,.brand-name').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('hov'));el.addEventListener('mouseleave',()=>cursor.classList.remove('hov'));});
+document.querySelectorAll('a, button, .product-card, .service-card, .filter-btn, .color-swatch, .model-btn, .modal-close').forEach(el=>{el.addEventListener('mouseenter',()=>cursor.classList.add('hov'));el.addEventListener('mouseleave',()=>cursor.classList.remove('hov'));});
+
+// --- SPA Navigation System ---
+function changeRoute(routeId) {
+    // Esconder todas las secciones
+    document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+    // Mostrar la sección destino
+    document.getElementById(routeId).classList.add('active');
+    
+    // Actualizar color de botones del menú
+    document.querySelectorAll('.nav-links button').forEach(btn => btn.classList.remove('active-link'));
+    let activeBtn = document.querySelector(`.nav-links button[data-target="${routeId}"]`);
+    if(activeBtn) activeBtn.classList.add('active-link');
+    
+    // Ir hasta arriba y cerrar menú móvil
+    window.scrollTo(0, 0);
+    document.getElementById('mobMenu').classList.remove('open');
+}
+
+// Check initial load hash (optional direct linking)
+window.addEventListener('load', () => {
+    let hash = window.location.hash.replace('#', '');
+    if(hash && document.getElementById(hash)) { changeRoute(hash); }
+});
+
 function toggleMenu(){document.getElementById('mobMenu').classList.toggle('open');}
+
+// --- Catalogo Filters ---
 document.querySelectorAll('.filter-btn').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const f=btn.dataset.filter;document.querySelectorAll('.product-card').forEach(c=>{c.classList.toggle('hidden',f!=='all'&&c.dataset.cat!==f);});});});
+
+// --- Modal System ---
 function openModal(card){document.getElementById('modalImg').src=card.dataset.img;document.getElementById('modalCat').textContent=card.dataset.catLabel;document.getElementById('modalTitle').textContent=card.dataset.name;document.getElementById('modalDesc').textContent=card.dataset.desc;document.getElementById('modalPrice').textContent=card.dataset.price;document.getElementById('modalOverlay').classList.add('open');}
 function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay'))document.getElementById('modalOverlay').classList.remove('open');}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+// --- Contact Form ---
 document.getElementById('contactForm').addEventListener('submit',async function(e){e.preventDefault();const btn=this.querySelector('.form-submit');btn.textContent='Enviando...';btn.disabled=true;try{const res=await fetch('/contacto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:document.getElementById('fname').value,telefono:document.getElementById('fphone').value,email:document.getElementById('femail').value,servicio:document.getElementById('fservicio').value,mensaje:document.getElementById('fmsg').value})});const data=await res.json();showToast(data.ok?'✅ Mensaje enviado. Te contactamos pronto.':'⚠️ Error al enviar.');if(data.ok)this.reset();}catch{showToast('⚠️ Error. Escríbenos por WhatsApp.');}btn.textContent='Enviar mensaje →';btn.disabled=false;});
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);}
+
+// --- 3D Customizer Logic ---
+const frameMain = document.getElementById('svg-frame');
+const frameSeat = document.getElementById('svg-frame-seat');
+const frameChain = document.getElementById('svg-frame-chain');
+const fork = document.getElementById('svg-fork');
+const handlebar = document.getElementById('svg-handlebar');
+
+const bikePaths = {
+    'mtb': {
+        main: "M 120 200 L 250 200 L 330 90 L 215 110 Z",
+        seat: "M 215 110 L 250 200",
+        chain: "M 120 200 L 250 200",
+        fork: "M 330 90 L 380 200",
+        handlebar: "M 320 65 L 350 65"
+    },
+    'ruta': {
+        main: "M 120 200 L 250 200 L 340 90 L 220 90 Z",
+        seat: "M 220 90 L 250 200",
+        chain: "M 120 200 L 250 200",
+        fork: "M 340 90 L 380 200",
+        handlebar: "M 340 90 Q 360 90 360 110" // Drop bars
+    },
+    'urbana': {
+        main: "M 120 200 L 250 200 Q 280 180 330 80 L 330 80 Q 270 190 250 200 Z", // Cuadro curvo bajo
+        seat: "M 210 80 L 250 200",
+        chain: "M 120 200 L 250 200",
+        fork: "M 330 80 L 380 200",
+        handlebar: "M 310 55 Q 330 45 350 70" // Manubrio curvo hacia atras
+    }
+};
+
+function setBikeModel(model, btnElement) {
+    // Update active class on buttons
+    document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+    btnElement.classList.add('active');
+    
+    // Animate SVG paths
+    frameMain.setAttribute('d', bikePaths[model].main);
+    frameSeat.setAttribute('d', bikePaths[model].seat);
+    frameChain.setAttribute('d', bikePaths[model].chain);
+    fork.setAttribute('d', bikePaths[model].fork);
+    handlebar.setAttribute('d', bikePaths[model].handlebar);
+}
+
+function setBikeColor(hexColor, swatchElement) {
+    // Update active class on palette
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    swatchElement.classList.add('active');
+    
+    // Update CSS variable to change frame color
+    document.documentElement.style.setProperty('--bike-color', hexColor);
+}
 </script>
 </body></html>
 """
@@ -680,10 +904,10 @@ def inicio():
     except Exception as e:
         error_info = traceback.format_exc()
         html_error = f"""
-        <html><body style="background:#222; color:white; padding:2rem; font-family:sans-serif;">
-            <h1 style="color:#FF5500;">⚠️ Modo Diagnóstico</h1>
+        <html><body style="background:#F8FAFC; color:#0F172A; padding:2rem; font-family:sans-serif;">
+            <h1 style="color:#2563EB;">⚠️ Modo Diagnóstico</h1>
             <p>La página detectó un error al intentar dibujar el contenido. Mándale esto a tu programador:</p>
-            <pre style="background:#111; padding:1rem; color:#ff9999; border-left: 4px solid red; overflow-x: auto;">{error_info}</pre>
+            <pre style="background:#FFFFFF; padding:1rem; color:#E63946; border-left: 4px solid #E63946; overflow-x: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">{error_info}</pre>
         </body></html>
         """
         return html_error, 500
@@ -713,7 +937,6 @@ def logout():
 def admin():
     if not session.get('admin'):
         return redirect(url_for('login'))
-    # CORRECCIÓN AQUÍ: Devolver la plantilla directamente para que Jinja no interfiera con Vue.
     return ADMIN_TEMPLATE
 
 @app.route('/api/datos', methods=['GET'])
