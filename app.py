@@ -439,18 +439,18 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .marquee-inner span{font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:.2em;color:#fff;margin:0 2rem;}
 .marquee-inner span.dot{color:rgba(255,255,255,.5);font-size:.9rem;margin:0;}
 
-/* Customizer (Mostrador 3D) */
+/* Customizer (Mostrador Realista) */
 .customizer-wrap { padding: 4rem 3rem; }
-.custom-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 3rem; align-items: center; margin-top: 2rem; }
-.podium-box { background: radial-gradient(circle at center, #ffffff 0%, #e2e8f0 100%); border: 1px solid var(--border-color); border-radius: 12px; padding: 3rem; display: flex; justify-content: center; align-items: center; min-height: 450px; position: relative; overflow: hidden; box-shadow: inset 0 0 50px rgba(0,0,0,0.02);}
-.podium-floor { position: absolute; bottom: -50px; left: 50%; transform: translateX(-50%); width: 80%; height: 100px; background: rgba(0,0,0,0.04); border-radius: 50%; box-shadow: 0 0 50px rgba(147,51,234,0.15); filter: blur(5px); }
-.bike-svg { width: 100%; max-width: 500px; position: relative; z-index: 2; filter: drop-shadow(0 20px 15px rgba(0,0,0,0.15)); transition: all 0.4s ease; }
-.bike-path { transition: stroke 0.4s ease, d 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+.custom-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 3rem; align-items: start; margin-top: 2rem; }
+.realistic-viewer { background: var(--bg-sec); border-radius: 16px; overflow: hidden; position: relative; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.04); }
+.realistic-img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: opacity 0.3s ease, transform 0.5s ease; }
+.realistic-img.loading { opacity: 0.3; transform: scale(1.02); filter: blur(4px); }
+.viewer-tag { position: absolute; top: 1.5rem; left: 1.5rem; background: rgba(255,255,255,0.9); padding: 0.4rem 1rem; border-radius: 30px; font-weight: 800; font-size: 0.75rem; color: var(--text-dark); box-shadow: 0 4px 10px rgba(0,0,0,0.05); letter-spacing: 0.1em; text-transform: uppercase; z-index: 10; backdrop-filter: blur(5px); }
 
-.tools-panel { background: var(--bg-card); padding: 2rem; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);}
+.tools-panel { background: var(--bg-card); padding: 2rem; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.04);}
 .tool-title { font-family: 'Barlow Condensed'; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; margin-bottom: 1rem; border-bottom: 2px solid var(--bg-main); padding-bottom: .5rem; color:var(--text-dark);}
 .model-selector { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 2.5rem; }
-.model-btn { background: transparent; border: 2px solid var(--border-color); color: var(--text-muted); padding: .8rem 1rem; font-family: 'Barlow'; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; cursor: pointer; transition: all .2s; text-align: left; display:flex; justify-content:space-between; align-items:center; border-radius:4px;}
+.model-btn { background: transparent; border: 2px solid var(--border-color); color: var(--text-muted); padding: .8rem 1rem; font-family: 'Barlow'; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; cursor: pointer; transition: all .2s; text-align: left; display:flex; justify-content:space-between; align-items:center; border-radius:8px;}
 .model-btn:hover, .model-btn.active { background: var(--bg-sec); border-color: var(--primary); color: var(--primary); }
 .model-btn.active::after { content: '✓'; color: var(--primary); font-weight: 900;}
 
@@ -621,95 +621,43 @@ footer{background:var(--text-dark);padding:4rem 3rem 2rem;}
     </div>
   </section>
 
-  <!-- ================= SERVICIOS ================= -->
-  <section class="page-section" id="servicios">
-    <div class="services">
-      <div class="services-header"><div><div class="section-sub"><span class="line-h"></span>Lo que hacemos</div><h2 class="section-title">Servicios del taller</h2></div><button onclick="changeRoute('contacto')" class="btn-secondary">Agendar cita →</button></div>
-      <div class="services-grid">{% for s in servicios %}<div class="service-card"><span class="service-icon">{{ s.icono }}</span><div class="service-name">{{ s.nombre }}</div><div class="service-desc">{{ s.descripcion }}</div><div class="service-price">{{ s.precio }}</div></div>{% endfor %}</div>
-    </div>
-  </section>
-
-  <!-- ================= CATÁLOGO ================= -->
-  <section class="page-section" id="catalogo">
-    <div class="catalog">
-      <div class="catalog-header"><div><div class="section-sub"><span class="line-h"></span>Lo que vendemos</div><h2 class="section-title">Catálogo</h2></div></div>
-      <div class="filters">
-        <button class="filter-btn active" data-filter="all">Todo</button>
-        <button class="filter-btn" data-filter="bici">Bicicletas</button>
-        <button class="filter-btn" data-filter="accesorio">Accesorios</button>
-        <button class="filter-btn" data-filter="repuesto">Repuestos</button>
-      </div>
-      <div class="catalog-grid">
-        {% for b in bicicletas %}<div class="product-card" data-cat="bici" data-img="{{ b.imagen }}" data-name="{{ b.modelo }}" data-cat-label="Bicicleta" data-desc="{{ b.descripcion }}" data-price="${{ '{:,.0f}'.format(b.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ b.imagen }}" alt="{{ b.modelo }}" loading="lazy">{% if b.badge %}<span class="prod-badge">{{ b.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Bicicleta</div><div class="prod-name">{{ b.modelo }}</div><div class="prod-desc">{{ b.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(b.precio) }}<br><small>{{ b.talla }}</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
-        {% for a in accesorios %}<div class="product-card" data-cat="accesorio" data-img="{{ a.imagen }}" data-name="{{ a.nombre }}" data-cat-label="Accesorio" data-desc="{{ a.descripcion }}" data-price="${{ '{:,.0f}'.format(a.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ a.imagen }}" alt="{{ a.nombre }}" loading="lazy">{% if a.badge %}<span class="prod-badge">{{ a.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Accesorio</div><div class="prod-name">{{ a.nombre }}</div><div class="prod-desc">{{ a.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(a.precio) }}<br><small>MXN</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
-        {% for r in repuestos %}<div class="product-card" data-cat="repuesto" data-img="{{ r.imagen }}" data-name="{{ r.nombre }}" data-cat-label="Repuesto" data-desc="{{ r.descripcion }}" data-price="${{ '{:,.0f}'.format(r.precio) }} MXN" onclick="openModal(this)"><div class="prod-img"><img src="{{ r.imagen }}" alt="{{ r.nombre }}" loading="lazy">{% if r.badge %}<span class="prod-badge">{{ r.badge }}</span>{% endif %}</div><div class="prod-info"><div class="prod-cat">Repuesto</div><div class="prod-name">{{ r.nombre }}</div><div class="prod-desc">{{ r.descripcion }}</div><div class="prod-footer"><div class="prod-price">${{ '{:,.0f}'.format(r.precio) }}<br><small>MXN</small></div><button class="btn-add">Ver más</button></div></div></div>{% endfor %}
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= MODIFICACIONES 3D ================= -->
+  <!-- ================= MODIFICACIONES (REALISTA) ================= -->
   <section class="page-section" id="modificaciones">
     <div class="customizer-wrap">
-      <div><div class="section-sub"><span class="line-h"></span>Tu estilo, tus reglas</div><h2 class="section-title">Estudio de Modificaciones</h2></div>
+      <div><div class="section-sub"><span class="line-h"></span>Vista Real</div><h2 class="section-title">Configurador de Estilos</h2></div>
       
       <div class="custom-grid">
         <!-- Visualizador Izquierda -->
-        <div class="podium-box">
-            <div class="podium-floor"></div>
-            <svg class="bike-svg" viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg">
-                <!-- Ruedas Base (Fijas - Grises Claras para combinar con tema claro) -->
-                <circle cx="120" cy="200" r="75" stroke="#94a3b8" stroke-width="12" fill="transparent" />
-                <circle cx="120" cy="200" r="5" fill="#64748b" />
-                <circle cx="380" cy="200" r="75" stroke="#94a3b8" stroke-width="12" fill="transparent" />
-                <circle cx="380" cy="200" r="5" fill="#64748b" />
-                <line x1="120" y1="200" x2="120" y2="125" stroke="#cbd5e1" stroke-width="2"/>
-                <line x1="120" y1="200" x2="195" y2="200" stroke="#cbd5e1" stroke-width="2"/>
-                <line x1="380" y1="200" x2="380" y2="125" stroke="#cbd5e1" stroke-width="2"/>
-                <line x1="380" y1="200" x2="305" y2="200" stroke="#cbd5e1" stroke-width="2"/>
-                
-                <!-- Componentes Negros/Oscuros (Asiento, Manubrio, Tijera Frontal) -->
-                <path d="M 190 85 L 240 85" stroke="#334155" stroke-width="14" stroke-linecap="round"/>
-                <path d="M 215 85 L 215 110" stroke="#475569" stroke-width="10"/>
-                <path id="svg-fork" d="M 330 90 L 380 200" stroke="#475569" stroke-width="10" stroke-linecap="round"/>
-                <path id="svg-handlebar" d="M 320 65 L 350 65" stroke="#334155" stroke-width="10" stroke-linecap="round"/>
-                <path d="M 330 90 L 335 65" stroke="#475569" stroke-width="8"/>
-                
-                <!-- CUADRO DINÁMICO (Cambia de forma y color) -->
-                <path id="svg-frame" class="bike-path" d="M 120 200 L 250 200 L 330 90 L 215 110 Z" fill="none" stroke="var(--bike-color)" stroke-width="14" stroke-linejoin="round" />
-                <path id="svg-frame-seat" class="bike-path" d="M 215 110 L 250 200" fill="none" stroke="var(--bike-color)" stroke-width="16" stroke-linecap="round"/>
-                <path id="svg-frame-chain" class="bike-path" d="M 120 200 L 250 200" fill="none" stroke="var(--bike-color)" stroke-width="10" stroke-linecap="round"/>
-                
-                <!-- Plato y Pedales -->
-                <circle cx="250" cy="200" r="18" fill="#475569" />
-                <line x1="250" y1="200" x2="250" y2="230" stroke="#475569" stroke-width="6" stroke-linecap="round"/>
-                <line x1="240" y1="230" x2="260" y2="230" stroke="#334155" stroke-width="8" stroke-linecap="round"/>
-            </svg>
+        <div class="realistic-viewer">
+            <div class="viewer-tag" id="viewerTag">Mountain Bike - Oscuro</div>
+            <!-- Imagen base -->
+            <img src="https://images.unsplash.com/photo-1576435728678-68ce0f6eb293?w=1200&q=80" alt="Bicicleta Real" id="realistic-img" class="realistic-img">
         </div>
 
         <!-- Panel de Herramientas Derecha -->
         <div class="tools-panel">
             <div class="tool-title">1. Selecciona el Modelo</div>
             <div class="model-selector">
-                <button class="model-btn active" onclick="setBikeModel('mtb', this)">Mountain Bike (MTB)</button>
-                <button class="model-btn" onclick="setBikeModel('ruta', this)">Bicicleta de Ruta</button>
-                <button class="model-btn" onclick="setBikeModel('urbana', this)">Urbana / Paseo</button>
+                <button class="model-btn active" data-model="mtb" onclick="setBike('mtb', this)">Mountain Bike (MTB)</button>
+                <button class="model-btn" data-model="ruta" onclick="setBike('ruta', this)">Bicicleta de Ruta</button>
+                <button class="model-btn" data-model="urbana" onclick="setBike('urbana', this)">Urbana / Paseo</button>
             </div>
 
             <div class="tool-title">2. Color del Cuadro</div>
             <div class="color-palette">
-                <!-- Colores vibrantes adaptados a fondo claro -->
-                <div class="color-swatch active" style="background:#2563EB;" onclick="setBikeColor('#2563EB', this)"></div> <!-- Azul -->
-                <div class="color-swatch" style="background:#9333EA;" onclick="setBikeColor('#9333EA', this)"></div> <!-- Morado -->
-                <div class="color-swatch" style="background:#E63946;" onclick="setBikeColor('#E63946', this)"></div> <!-- Rojo -->
-                <div class="color-swatch" style="background:#10B981;" onclick="setBikeColor('#10B981', this)"></div> <!-- Verde -->
-                <div class="color-swatch" style="background:#F59E0B;" onclick="setBikeColor('#F59E0B', this)"></div> <!-- Naranja -->
-                <div class="color-swatch" style="background:#EC4899;" onclick="setBikeColor('#EC4899', this)"></div> <!-- Rosa -->
-                <div class="color-swatch" style="background:#1E293B;" onclick="setBikeColor('#1E293B', this)"></div> <!-- Negro/Oscuro -->
-                <div class="color-swatch" style="background:#94A3B8;" onclick="setBikeColor('#94A3B8', this)"></div> <!-- Plata -->
+                <!-- 8 colores base para un catálogo realista más amplio -->
+                <div class="color-swatch active" data-color="oscuro" style="background:#1E293B;" onclick="setColor('oscuro', this)"></div>
+                <div class="color-swatch" data-color="rojo" style="background:#E63946;" onclick="setColor('rojo', this)"></div>
+                <div class="color-swatch" data-color="azul" style="background:#2563EB;" onclick="setColor('azul', this)"></div>
+                <div class="color-swatch" data-color="claro" style="background:#F8FAFC;" onclick="setColor('claro', this)"></div>
+                <div class="color-swatch" data-color="verde" style="background:#10B981;" onclick="setColor('verde', this)"></div>
+                <div class="color-swatch" data-color="naranja" style="background:#F59E0B;" onclick="setColor('naranja', this)"></div>
+                <div class="color-swatch" data-color="morado" style="background:#9333EA;" onclick="setColor('morado', this)"></div>
+                <div class="color-swatch" data-color="plata" style="background:#94A3B8;" onclick="setColor('plata', this)"></div>
             </div>
             
             <div style="margin-top: 2.5rem;">
-                <button onclick="changeRoute('contacto')" class="btn-primary" style="width:100%; text-align:center;">Cotizar Proyecto</button>
+                <button onclick="changeRoute('contacto')" class="btn-primary" style="width:100%; text-align:center;">Cotizar este diseño</button>
             </div>
         </div>
       </div>
@@ -837,57 +785,78 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 document.getElementById('contactForm').addEventListener('submit',async function(e){e.preventDefault();const btn=this.querySelector('.form-submit');btn.textContent='Enviando...';btn.disabled=true;try{const res=await fetch('/contacto',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nombre:document.getElementById('fname').value,telefono:document.getElementById('fphone').value,email:document.getElementById('femail').value,servicio:document.getElementById('fservicio').value,mensaje:document.getElementById('fmsg').value})});const data=await res.json();showToast(data.ok?'✅ Mensaje enviado. Te contactamos pronto.':'⚠️ Error al enviar.');if(data.ok)this.reset();}catch{showToast('⚠️ Error. Escríbenos por WhatsApp.');}btn.textContent='Enviar mensaje →';btn.disabled=false;});
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);}
 
-// --- 3D Customizer Logic ---
-const frameMain = document.getElementById('svg-frame');
-const frameSeat = document.getElementById('svg-frame-seat');
-const frameChain = document.getElementById('svg-frame-chain');
-const fork = document.getElementById('svg-fork');
-const handlebar = document.getElementById('svg-handlebar');
+// --- Realistic Customizer Logic ---
+const realisticImg = document.getElementById('realistic-img');
+const viewerTag = document.getElementById('viewerTag');
+let currentModel = 'mtb';
+let currentColor = 'oscuro';
 
-const bikePaths = {
+// Diccionario con fotografías 100% reales en alta calidad (Añadidos 4 colores extra)
+const bikePhotos = {
     'mtb': {
-        main: "M 120 200 L 250 200 L 330 90 L 215 110 Z",
-        seat: "M 215 110 L 250 200",
-        chain: "M 120 200 L 250 200",
-        fork: "M 330 90 L 380 200",
-        handlebar: "M 320 65 L 350 65"
+        'oscuro': 'https://images.unsplash.com/photo-1576435728678-68ce0f6eb293?w=1200&q=80',
+        'rojo': 'https://images.unsplash.com/photo-1558981359-219d6364c9c8?w=1200&q=80',
+        'azul': 'https://images.unsplash.com/photo-1563212044-773df40fa2dd?w=1200&q=80',
+        'claro': 'https://images.unsplash.com/photo-1544191696-102dbdaeeaa0?w=1200&q=80',
+        'verde': 'https://images.unsplash.com/photo-1605553535914-41d3faec95eb?w=1200&q=80',
+        'naranja': 'https://images.unsplash.com/photo-1533560904424-a0c61dc306fc?w=1200&q=80',
+        'morado': 'https://images.unsplash.com/photo-1593018867503-4f27c73a21ba?w=1200&q=80',
+        'plata': 'https://images.unsplash.com/photo-1610926950553-ebd024479e39?w=1200&q=80'
     },
     'ruta': {
-        main: "M 120 200 L 250 200 L 340 90 L 220 90 Z",
-        seat: "M 220 90 L 250 200",
-        chain: "M 120 200 L 250 200",
-        fork: "M 340 90 L 380 200",
-        handlebar: "M 340 90 Q 360 90 360 110" // Drop bars
+        'oscuro': 'https://images.unsplash.com/photo-1571333250630-f0230c320b6d?w=1200&q=80',
+        'rojo': 'https://images.unsplash.com/photo-1511994298241-608e28f14fde?w=1200&q=80',
+        'azul': 'https://images.unsplash.com/photo-1559268950-2d7ceb2efa3a?w=1200&q=80',
+        'claro': 'https://images.unsplash.com/photo-1484920274317-87885fcbc504?w=1200&q=80',
+        'verde': 'https://images.unsplash.com/photo-1525826201389-9fc6267675ce?w=1200&q=80',
+        'naranja': 'https://images.unsplash.com/photo-1505322022379-7c3353ee6291?w=1200&q=80',
+        'morado': 'https://images.unsplash.com/photo-1618886487325-f665032b6352?w=1200&q=80',
+        'plata': 'https://images.unsplash.com/photo-1534787238916-9ba6764efd4f?w=1200&q=80'
     },
     'urbana': {
-        main: "M 120 200 L 250 200 Q 280 180 330 80 L 330 80 Q 270 190 250 200 Z", // Cuadro curvo bajo
-        seat: "M 210 80 L 250 200",
-        chain: "M 120 200 L 250 200",
-        fork: "M 330 80 L 380 200",
-        handlebar: "M 310 55 Q 330 45 350 70" // Manubrio curvo hacia atras
+        'oscuro': 'https://images.unsplash.com/photo-1471506480208-91b3a4cc78be?w=1200&q=80',
+        'rojo': 'https://images.unsplash.com/photo-1507560461415-99731cfa9ace?w=1200&q=80',
+        'azul': 'https://images.unsplash.com/photo-1520113412548-5240224df086?w=1200&q=80',
+        'claro': 'https://images.unsplash.com/photo-1528629297340-d1d466945dc5?w=1200&q=80',
+        'verde': 'https://images.unsplash.com/photo-1512106374988-c95f566d39ef?w=1200&q=80',
+        'naranja': 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&q=80',
+        'morado': 'https://images.unsplash.com/photo-1507035895480-2b3156c31fc8?w=1200&q=80',
+        'plata': 'https://images.unsplash.com/photo-1622340398608-be6329bb6d7a?w=1200&q=80'
     }
 };
 
-function setBikeModel(model, btnElement) {
-    // Update active class on buttons
-    document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
-    btnElement.classList.add('active');
+const modelNames = { 'mtb': 'Mountain Bike', 'ruta': 'Bici de Ruta', 'urbana': 'Urbana / Paseo' };
+const colorNames = { 
+    'oscuro': 'Estilo Oscuro', 'rojo': 'Estilo Rojo', 'azul': 'Estilo Azul', 'claro': 'Estilo Claro',
+    'verde': 'Estilo Verde', 'naranja': 'Estilo Naranja', 'morado': 'Estilo Morado', 'plata': 'Estilo Plata'
+};
+
+function updateViewer() {
+    // Añade efecto de desenfoque mientras carga la nueva foto real
+    realisticImg.classList.add('loading');
     
-    // Animate SVG paths
-    frameMain.setAttribute('d', bikePaths[model].main);
-    frameSeat.setAttribute('d', bikePaths[model].seat);
-    frameChain.setAttribute('d', bikePaths[model].chain);
-    fork.setAttribute('d', bikePaths[model].fork);
-    handlebar.setAttribute('d', bikePaths[model].handlebar);
+    // Precarga de la nueva imagen
+    const newImg = new Image();
+    newImg.src = bikePhotos[currentModel][currentColor];
+    newImg.onload = () => {
+        realisticImg.src = newImg.src;
+        realisticImg.classList.remove('loading');
+        viewerTag.textContent = `${modelNames[currentModel]} - ${colorNames[currentColor]}`;
+    };
 }
 
-function setBikeColor(hexColor, swatchElement) {
-    // Update active class on palette
+function setBike(model, btnElement) {
+    currentModel = model;
+    document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+    btnElement.classList.add('active');
+    updateViewer();
+}
+
+function setColor(color, swatchElement) {
+    currentColor = color;
     document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
     swatchElement.classList.add('active');
-    
-    // Update CSS variable to change frame color
-    document.documentElement.style.setProperty('--bike-color', hexColor);
+    updateViewer();
 }
 </script>
 </body></html>
